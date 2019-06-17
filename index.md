@@ -1,32 +1,22 @@
 ## frumious source for code sharing,
 
-intermittently updated by doctoral student colin annand
+intermittently updated by a doctoral student colin annand
 
-
-
-
-
-
+```
+some code will go here soon
+```
 
 ### Word play
 perhaps you with to distim the doshes? [The Gostak](http://iplayif.com/?story=http%3A%2F%2Fwww.ifarchive.org%2Fif-archive%2Fgames%2Fzcode%2Fgostak.z5)
 
-### Support
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/)
 
 
 ```markdown
-Syntax highlighted code block
+markdown notes for things I'll forget...
 
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
+# Governing head
+## Middling head
+### Pleabian head
 
 **Bold** and _Italic_ and `Code` text
 
