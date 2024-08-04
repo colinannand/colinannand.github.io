@@ -1,87 +1,177 @@
 ---
-title: About
-layout: page
-description: About
-bodyClass: page-about
+layout: about
+image: /assets/img/blog/hydejack-9.jpg
+description: >
+  A boutique Jekyll theme for hackers, nerds, and academics,
+  with a focus on personal sites that are meant to impress.
+hide_description: true
+redirect_from:
+  - /download/
 ---
 
-Lorem markdownum aequalis strigis. _Saetigeri iubeas_, vultu huic alvum nondum
-de obside ut laniavit arbor palmis, cum quin. Rupes vetat videndo, armigerae
-crimen habet Priamum nec.
+# About
 
-![Accounting Services](/images/thom-holmes-Lrfw0U_o9I0-unsplash.jpg)
+<!--author-->
 
-# Objectives
+## Hydejack
 
-Financial accounting and financial reporting are often used as synonyms.
+A boutique Jekyll theme for hackers, nerds, and academics.  
+{:.lead}
 
-1. According to International Financial Reporting Standards: the objective of financial reporting is:
-2. To provide financial information that is useful to existing and potential investors, lenders and other creditors in making decisions about providing resources to the reporting entity.
-3. According to the European Accounting Association:
+1. this list will be replaced by the toc
+{:toc .large-only}
 
-## Relevance
+![Screenshot](assets/img/blog/hydejack-9.jpg){:.lead width="1920" height="1080" loading="lazy"}
 
-Relevance is the capacity of the financial information to influence the decision of its users. The ingredients of relevance are the predictive value and confirmatory value. Materiality is a sub-quality of relevance.
+Hydejack's cover page on a variety of screen sizes.
+{:.figcaption}
 
-> The ingredients of relevance are the predictive value and confirmatory value.
 
-Information is considered material if its omission or misstatement could influence the economic decisions of users taken on the basis of the financial statements.
+**Hydejack** is a boutique Jekyll theme for hackers, nerds, and academics, with a focus on personal sites that are meant to impress. 
 
-## Faithful Representation
+It includes a blog that is suitable for both prose and technical documentation, a portfolio to showcase your projects, and a resume template that looks amazing on the web and in print.
 
-Faithful representation means that the actual effects of the transactions shall be properly accounted for and reported in the financial statements. The words and numbers must match what really happened in the transaction. The ingredients of faithful representation are completeness, neutrality and free from error.
+> Your complete presence on the web — A [blog], [portfolio], and [resume].
+{:.lead}
 
-## Enhancing Qualitative Characteristics
 
-### Verifiability
+## A Personal Site That Won't Disappear
 
-Verifiability implies consensus between the different knowledgeable and independent users of financial information. Such information must be supported by sufficient evidence to follow the principle of objectivity.
+**Hydejack** is 100% built on Open Source software, and is Open Source itself, save for parts of the PRO version. The PRO version is a one-time payment that gives you the right to use it forever.
 
-### Comparability
+Hydejack is all static sites. _HTML_. All you need is a web server --- any web server --- to have a professional web presence that lasts a lifetime.
 
-Comparability is the uniform application of accounting methods across entities in the same industry. The principle of consistency is under comparability. Consistency is the uniform application of accounting across points in time within an entity.
+## Download
 
-### Understandability
+{% include table.md %}
 
-Understandability means that accounting reports should be expressed as clearly as possible and should be understood by those to whom the information is relevant.
-Timeliness: Timeliness implies that financial information must be presented to the users before a decision is to be made.
 
----
+## A Free Blogging Theme
+**Hydejack** started out as a free blogging theme for Jekyll — and continues to be so.
 
-## Statement of cash flows
+<!--posts-->
 
-The statement of cash flows considers the inputs and outputs in concrete cash within a stated period. The general template of a cash flow statement is as follows: Cash Inflow - Cash Outflow + Opening Balance = Closing Balance
 
-| Cash Inflow | Outflow   | Opening Balance |
-| ----------- | --------- | --------------- |
-| _Monday_    | `Tuesday` | **Wednesday**   |
-| 1           | 2         | 3               |
+## An Impressive Portfolio
+A portfolio that's guaranteed to be impressive — no matter what you put into it.
 
-**Example 1:** in the beginning of September, Ellen started out with $5 in her bank account. During that same month, Ellen borrowed $20 from Tom. At the end of the month, Ellen bought a pair of shoes for $7. Ellen's cash flow statement for the month of September looks like this:
+<!--projects-->
 
-- Cash inflow: $20
-- Cash outflow:$7
-- Opening balance: $5
-- Closing balance: $20 – $7 + $5 = $18
 
-**Example 2:** in the beginning of June, WikiTables, a company that buys and resells tables, sold 2 tables. They'd originally bought the tables for $25 each, and sold them at a price of $50 per table. The first table was paid out in cash however the second one was bought in credit terms. WikiTables' cash flow statement for the month of June looks like this:
+## A Printable Resume
+Get a resume that's consistent across the board — whether it's on the web, mobile, print, or [PDF](assets/Resume.pdf).
 
-> **Important:** the cash flow statement only considers the exchange of actual cash, and ignores what the person in question owes or is owed.
+[![Resume PDF](assets/img/blog/resume.png){:.lead width="884" height="632" loading="lazy"}][resume]{:.no-hover.no-mark}
 
-## Statement of financial position (balance sheet)
+Front and center page of a print resume generated by Hydejack.
+{:.figcaption}
 
-The balance sheet is the financial statement showing a firm's assets, liabilities and equity (capital) at a set point in time, usually the end of the fiscal year reported on the accompanying income statement.
 
-- **fixed assets**
-  - property
-  - building
-  - equipment (such as factory machinery)
-- **intangible assets**
-  - copyrights
-  - trademarks
-  - patents
-    - pending
-    - international
-- goodwill
+## Just Markdown
+Write all content with Markdown. __Hydejack__ gives you [additional CSS classes](docs/writing.md) to stylize your content, without losing compatibility with other Jekyll themes.
 
-Owner's equity, sometimes referred to as net assets, is represented differently depending on the type of business ownership. Business ownership can be in the form of a sole proprietorship, partnership, or a corporation. For a corporation, the owner's equity portion usually shows common stock, and retained earnings (earnings kept in the company). Retained earnings come from the retained earnings statement, prepared prior to the balance sheet.
+
+## Just Markup
+**Hydejack** boasts a plethora of modern JavaScript, but make no mistake: It's still a _plain old web page_ at its core. It works without JavaScript and you can even view it in a text-based browser like `w3m`:
+
+![w3m Screenshot](assets/img/blog/w3m.png){:.tail width="1920" height="1260" loading="lazy"}
+
+The Hydejack blog, as seen by the text browser `w3m`.
+{:.figcaption}
+
+
+## Syntax Highlighting
+**Hydejack** features syntax highlighting, powered by [Rouge].
+
+```html
+<!-- file: `_includes/my-body.html` -->
+<script type="module">
+  document.querySelector("hy-push-state").addEventListener("hy-push-state-load", () => {
+    const supportsCodeHighlights = false; // TBD!!
+  });
+</script>
+```
+
+Code blocks can have a filename and a caption.
+{:.figcaption}
+
+
+## Beautiful Math
+They say math is beautiful — and with **Hydejack**'s [math support][math] it's guaranteed to also look beautiful:
+
+$$
+\begin{aligned}
+  \phi(x,y) &= \phi \left(\sum_{i=1}^n x_ie_i, \sum_{j=1}^n y_je_j \right) \\[2em]
+            &= \sum_{i=1}^n \sum_{j=1}^n x_i y_j \phi(e_i, e_j)            \\[2em]
+            &= (x_1, \ldots, x_n)
+               \left(\begin{array}{ccc}
+                 \phi(e_1, e_1)  & \cdots & \phi(e_1, e_n) \\
+                 \vdots          & \ddots & \vdots         \\
+                 \phi(e_n, e_1)  & \cdots & \phi(e_n, e_n)
+               \end{array}\right)
+               \left(\begin{array}{c}
+                 y_1    \\
+                 \vdots \\
+                 y_n
+               \end{array}\right)
+\end{aligned}
+$$
+
+Hydejack uses KaTeX to efficiently render math.
+{:.figcaption}
+
+
+## Build an Audience
+The PRO version has built-in support for customizable [Tinyletter] newsletter subscription boxes.
+
+If you are using a different service like MailChimp, you can build a custom newsletter subscription box using [Custom Forms][forms].
+
+
+## Features
+
+{% include features.md %}
+
+
+## Comparison
+
+{% include table.md %}
+
+
+## Get It Now
+
+Use the the form below to purchase Hydejack PRO:
+
+<div class="gumroad-product-embed" data-gumroad-product-id="nuOluY"><a href="https://gumroad.com/l/nuOluY">Loading…</a></div>
+
+
+[blog]: /
+[portfolio]: https://hydejack.com/examples/
+[resume]: https://hydejack.com/resume/
+[download]: https://hydejack.com/download/
+[welcome]: https://hydejack.com/
+[forms]: https://hydejack.com/forms-by-example/
+
+[features]: #features
+[news]: #build-an-audience
+[syntax]: syntax-highlighting
+[latex]: #beautiful-math
+[dark]: https://hydejack.com/blog/hydejack/2018-09-01-introducing-dark-mode/
+[search]: https://hydejack.com/#_search-input
+[grid]: https://hydejack.com/blog/hydejack/
+
+[lic]: LICENSE.md
+[pro]: licenses/PRO.md
+[docs]: docs/README.md
+[ofln]: docs/advanced.md#enabling-offline-support
+[math]: docs/writing.md#adding-math
+
+[kit]: https://github.com/hydecorp/hydejack-starter-kit/releases
+[src]: https://github.com/hydecorp/hydejack
+[gem]: https://rubygems.org/gems/jekyll-theme-hydejack
+[buy]: https://gum.co/nuOluY
+
+[gpss]: https://developers.google.com/speed/pagespeed/insights/?url=https%3A%2F%2Fhydejack.com%2Fdocs%2F
+[rouge]: http://rouge.jneen.net
+[katex]: https://khan.github.io/KaTeX/
+[mathjax]: https://www.mathjax.org/
+[tinyletter]: https://tinyletter.com/
