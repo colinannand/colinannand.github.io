@@ -20,19 +20,18 @@ baseurl:               '/colinannand'
 lang:                  en
 
 # The title of your blog. Used in the sidebar and the browser tab.
-title:                 Psych Droppings
+title:                 Placebos Only
 
 # A short description (~150 chars) of the page used for the meta description tag.
 # Can use markdown, but no more than one paragraph (enforced by `>`)
 description:           >
-  This is templated of the theme from Hydejack. Hopefully it looks nice. Hydejack is a boutique Jekyll theme for hackers, nerds, and academics,
-  with a focus on personal sites that are meant to impress.
+  Various psychological droppings randomly alternated with complete nonsense. Effectivity based on your own belief. 
 
 # A shorter description for the sidebar.
-tagline:               Change `tagline` in `_config.yml`
+tagline:               Various psychological droppings or nonsense.
 
 # A list of keywords for your blog
-keywords:              []
+keywords:              [experimental, complex systems, statistics, fiction]
 
 # A (square) logo for your site.
 # If provided, it will be shown at the top of the sidebar.
@@ -42,8 +41,8 @@ logo:                  /assets/img/logo.png
 # This should be the same author as first entry in `_data/authors.yml`.
 author:
   # Used by `jekyll-feed`:
-  name:                <firstname> <lastname>
-  email:               <mail@domain.tld>
+  name:                linc O.
+  email:               linc@dispatch.mozmail.com
   # # Used by `jekyll-seo-tag`:
   # twitter:             <username>
 
