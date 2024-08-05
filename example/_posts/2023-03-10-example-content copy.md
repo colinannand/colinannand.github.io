@@ -1,0 +1,28 @@
+---
+layout: post
+title: Skyblind
+description: >
+  I wrote this while sitting on my patio, sometime last year perhaps
+sitemap: false
+hide_last_modified: true
+---
+
+densely meshed nest of leaves, undersides hued lighter green than dark tear-drop tops, cross and recross the illusory sky blue that fades to white where it pools across the horizon.
+
+*Maia* giggles inappropriately in my mind, as if they told a dirty joke in a formal setting, their blue brush paint graffitied the inverted pointillism galleria on display when I slept.
+
+Before I had awakened, the illusion was complete. If I sit still, perfectly, breath held, the blue and green and white is flat, a canvas painting immediate to my eyes, before me, wrapping around me - I reach out, fingers extended to dip into pigmented pools but my hand returns dry, holding nothing, nothing holding, holding nothing, nothing holding.
+
+
+--
+
+Dearest reflection, 
+
+The intensity of your eye-contact is unnerving. 
+I prefer, by far, your refracted cousin I find in my iPhone galleria, 
+gaze averted towards some infinity point, 
+plastered with blissful smile.,
+empty of intent, 
+
+I choose an emotion to pour into its shallow pool, 
+tinting that past with this presents fuel. 
