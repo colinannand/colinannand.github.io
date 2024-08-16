@@ -64,7 +64,9 @@ menu:
   - title: Projects
     url:   /projects/
   - title: Resume
-    url:   /resume/
+    url:   /resume/2024-06-resume
+  title: Resume2
+    url:   /resume/2024-06-resume
   - title: About
     url:   /about/
 ```
