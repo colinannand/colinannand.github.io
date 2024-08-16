@@ -1,6 +1,6 @@
 ---
-layout: post
-title: Example Content III
+layout: about
+title: EDITED CONTENT THREE
 description: >
   A page showing Hydejack-specific markdown content.
 image: 
