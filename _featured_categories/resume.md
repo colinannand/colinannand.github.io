@@ -3,7 +3,7 @@
 layout: list
 
 # The title of the tag's page.
-title: Example
+title: Resume
 
 
 # (Optional) Write a short (~150 characters) description of this featured tag.
