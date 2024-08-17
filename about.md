@@ -11,14 +11,15 @@ redirect_from:
 
 <!--author-->
 
-This site has a [blog], example work in my [portfolio], and the always necessary [resume] [^11].
+This site has a [blog], example work in my [portfolio], and the always necessary [resume].[^11]
 
-[^11]: You can also check my linked in page or email, this resume is not comprehensive. My academic CV and publications can be found on Google Scholar. 
+[^11]: You can also check my linked in page or email, this resume is not comprehensive. My academic CV and publications can be found on [Google Scholar]. 
 
 
 [blog]: https://colinannand.github.io/
 [portfolio]: https://colinannand.github.io/projects/
 [resume]: https://colinannand.github.io/resume/
+
 [Google Scholar]: https://scholar.google.com/citations?user=DnmNs0MAAAAJ&hl=en
 <!--
 [download]: https://hydejack.com/download/
