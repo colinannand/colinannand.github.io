@@ -48,12 +48,10 @@ author:
 
 # Add links to the sidebar.
 menu:
-  - title: Analytic Works
-    url: /example/
-  - title: Documentation
-    url: /docs/
-  - title: About
-    url: /about/
+  - title: Example Work
+    url: /projects/
+#  - title: Documentation
+#    url: /docs/
   - title: Writing
     url: /writing/
   - title: Resume
