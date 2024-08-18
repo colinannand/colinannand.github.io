@@ -1,0 +1,36 @@
+.sass-cache
+/dross
+HIDEME
+/drafts
+/cache
+/docs/hidden
+/docs/job-materials
+/docs/non-academic-jobs
+/figure
+/extdata
+*.bak
+
+# I think these are unique to a new setup.
+3Gemfile
+#Gemfile.lock
+
+# I don't need anyone to see these files
+# They're intermediate output or private info
+#docs/**/*.Rmd
+#docs/**/*.tex
+#docs/**/*.log
+*.Rproj
+.Rproj.user
+
+# ignore temp files w/ trailing ~
+*~
+
+# ignore hidden files
+.*
+
+# don't ignore the .gitignore file
+!.gitignore
+
+# Finally adding this
+# https://stackoverflow.com/questions/32335459/git-ignore-filenames-which-contain-pattern-to-ignore
+#**testy-mctesterson**}

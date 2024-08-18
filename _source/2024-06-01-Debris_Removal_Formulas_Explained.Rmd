@@ -1,0 +1,652 @@
+---
+title: "R4_Debris_Removal_Formulas_Exploration"
+author: "Colin T. Annand"
+date: "2024-06"
+always_allow_html: true
+output:
+  md_document:
+    variant: gfm
+    preserve_yaml: TRUE
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../_posts") })
+description: "Work from a FEMA short suspense analysis."
+layout: post
+categories:
+  - R Markdown
+  - Jekyll    
+    
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
+lapply(c("dplyr","ggplot2","scales", "rmdformats", "kableExtra"), FUN=library, character.only=TRUE, quietly=TRUE)
+
+base_dir <- "~/Users/cannand/GitHub/colinannand.github.io" # i.e. where the jekyll blog is on the hard drive.
+base_url <- "/" # keep as is
+fig_path <- "images/" # customize to heart's content, I 'spose.
+
+knitr::opts_knit$set(base.dir = base_dir, base.url = base_url)
+knitr::opts_chunk$set(fig.path = fig_path,
+                      cache.path = '../cache/',
+                      message=FALSE, warning=FALSE,
+                      cache = TRUE) 
+
+
+```
+
+```{r fig.margin=FALSE, fig.width = 1, fig.height = 1,  warning=FALSE, message=FALSE, cache=TRUE, echo=FALSE}
+knitr::include_graphics("../images/fema-logo-blue.svg")
+```
+
+# Debris Model Analysis {.tabset}
+
+This report is split into multiple sections, which you can access with the tabs below. There is a summary, then **Vegetative Debris** and **Construction Debris**, and an *Appendix*. You can switch between the tabs/analysis by clicking the tab headers below:
+______________________________________________________________________
+
+
+## BLUF
+
+We support the following formulas for Vegetative debris prediction and Construction debris predictions:
+
+### Vegetative
+$$Cost = 10^{(log10( Cubic Yards )*0.73076 + 2.5827 )}$$
+
+### Construction
+$$Cost = 10^( log10 (Cubic Yards )*0.54892  + 3.5681)$$
+The analysis and explanation for each of these follows below. The multipliers(cost per cubic yard) and the intercept (base costs for removal) are derived from *linear regression*. 
+
+>> Use the table of contents to the left, and the analysis tabs to view a given section. 
+
+### Debris Data 
+
+Below is data aggregated to *separate instances of debris removal* at the **county** level. We briefly view the data below, and will use **Gross_Cost** and **Quantity** (in Cubic Yards) to calculate ratios and relationships like '*cost per cubic yard*' across the counties and projects in the dataset. We are including **all regions** in this version of the analysis, to be able to fit more robust relationships between cost and quantity. 
+
+- Data Range: 2016-2024
+- Regions: (ALL)
+- Number of Debris Removals: 14384
+
+```{r echo=FALSE}
+load("../extdata/Non-PII-Debris-Data.Rdata", verbose=F)
+```
+
+```{r}
+# names(cd_pred)
+# 
+# cd_pred2 <- cd_pred %>% select(1:10,20:21,23,29,49:51)
+# names(cd_pred2)
+# names(cd_pred) <- c("Disaster_num", "FIPS", "Dec_Date", "Num_Removals", "Num_Damages", "Num_Projects", "Gross_Cost", "Net_Cost", "Quantity", "year", "Population", "Infrastructure_Value", "RISK_SCORE", "RESL_SCORE" ,"disasterName", "incidentType", "region")
+# 
+# cd_pred <- cd_pred2
+# 
+# veg_pred2 <- veg_pred %>% select(1:10,20:21,23,29,49:51)
+# 
+# names(veg_pred)
+# 
+# names(veg_pred2) <- c("Disaster_num", "FIPS", "Dec_Date", "Num_Removals", "Num_Damages", "Num_Projects", "Gross_Cost", "Net_Cost", "Quantity", "year", "Population", "Infrastructure_Value", "RISK_SCORE", "RESL_SCORE" ,"disasterName", "incidentType", "region")
+# 
+# veg_pred <- veg_pred2
+# 
+# getwd()
+#save(veg_pred, cd_pred, CY_Debris_Data_By_Applicant_Damage_Removal_ID, file = "Non-PII-Debris-Data.Rdata")
+
+```
+
+
+```{r}
+kable(CY_Debris_Data_By_Applicant_Damage_Removal_ID[1:50,]) %>% 
+  kable_styling(repeat_header_text = T, "striped", full_width = F) %>%
+  scroll_box(height = "650px")
+```
+
+
+```{r}
+### Plot of Veg Debris Costs Data available:
+  #- The bulk of datum fall in between 3 and 10 or so dollars. 
+
+# stat_tbl <- CY_Debris_Data_By_Applicant_Damage_Removal_ID
+# 
+# stat_tbl.mut <- stat_tbl %>% mutate(BaseC.CY = Gross_Cost/Quantity)
+# 
+# summary(stat_tbl.mut$BaseC.CY)
+# 
+# 
+# ggplot(stat_tbl.mut, aes(x=BaseC.CY))+
+#   geom_histogram()+
+#   scale_x_log10(label=scales::dollar)+
+#   facet_wrap(~Debris_Type)
+# unique(CY_Debris_Data_By_Applicant_Damage_Removal_ID$Debris_Type)
+
+```
+
+
+
+
+
+## Veg-Debris
+
+### The Vegetative Debris Data
+
+```{r}
+kable(veg_pred[1:20,]) %>% 
+    kable_styling(repeat_header_text = T, "striped", full_width = F) %>%
+    scroll_box(height = "650px")
+```
+
+### Distribution of Costs per Cubic Yard
+
+```{r}
+veg_pred.m <- veg_pred %>% 
+  filter(Quantity > 10,
+         Gross_Cost > 500,
+         Gross_Cost < 1e07) %>% 
+  mutate(log.Gross = log10(Gross_Cost), 
+         log.Quantity = log10(Quantity),
+         LogG.div.logQuant = log.Gross/log.Quantity,
+         AvgC.CY = 10^LogG.div.logQuant)
+
+summary(veg_pred.m$AvgC.CY)
+
+```
+Minimum, Central Tendency and Quartile Points.
+Median Cost is at **$27.09** dollars. 
+The Mean is *skewed* by extremely high cost projects. 
+This is also why we log (exponentially) scale quantity and cost in most of the analysis. 
+
+```{r}
+ggplot(veg_pred.m, aes(x=AvgC.CY))+
+  geom_histogram()+
+  scale_x_log10(label=scales::dollar)+
+  facet_wrap(~ifelse(region==4,"Region_4", "Other_Regions"))
+
+```
+Histogram showing the frequency of projects around certain cost per cubic yards. **Region 4** looks very similar to the others.
+
+#### Chart of Cost against Quantity
+```{r}
+veg_pred %>% 
+  mutate(R4 = ifelse(region==4,"Region_4", "Other_Regions")) %>% 
+  ggplot(aes(y=Gross_Cost, x=Quantity, color=R4))+
+  geom_point()+
+  scale_x_log10(labels=comma)+
+  scale_y_log10(labels=dollar)+
+  labs(x="Quantity - Cubic Yards", y="Gross Cost")
+
+# WE NEED BOUNDS FOR MISSING DATA
+```
+
+Notes:
+- This is on log-log scales, so major tick lines increase by powers of 10:
+- This allows us to again confirm that **Region 4 is similar to other regions**.
+- We can start to see an approximately linear relationship between cost and quantity. 
+- There are some outliers we need to remove:
+  - Low values for Cost/Quantity (probably incorrect info, or not entered info)
+  
+#### Chart with Regression and Line Relationships
+```{r}
+veg_pred %>% 
+  mutate(R4 = ifelse(region==4,"Region_4", "Other_Regions")) %>% 
+  filter(Quantity > 10,
+         Gross_Cost > 500) %>% 
+  ggplot(aes(y=Gross_Cost, x=Quantity))+
+  geom_point()+
+  scale_x_log10(label=scales::comma)+
+  scale_y_log10(label=scales::dollar)+
+  geom_vline(aes(xintercept=1e06), col='orange')+
+  geom_smooth(method="loess")+
+  geom_smooth(method="lm")+
+  geom_abline(slope = 1, intercept=1.5, lwd=1.25, col="green")+
+  labs(x="Quantity - Cubic Yards", y="Gross Cost")
+
+```
+
+Quite the chart! First, R4 is not separated out (it would be too confusing and we don't need to anyway). 
+- What I find interesting here, is the evidence for a changing relationship between **Cost** and **Quantity**. 
+- If we use a multiplier like $25 (1 CY of debris cost 25)$ we would have a single straight line, but it wouldn't fit well at the beginning or end of the chart.
+
+- The line that fits on this chart (green line) is actually a log-log line assuming an equal scaling relationship (slope =1) between the variables. This is actually a scaling relationship that looks straight because we transformed *Cost* and *Quantity* with a log10 function. 
+-I adjusted the intercept ("base cost") of where the line starts to make it fit close to the scattered data cloud. 
+- Note: the Orange line will be used to filter out the extremely large debris removal amounts. 
+
+```{r}
+veg_pred %>% 
+  filter(Quantity > 10,
+         Quantity < 5e07,
+         Gross_Cost > 500) %>% 
+  ggplot(aes(y=Gross_Cost, x=Quantity))+
+  geom_point()+
+  scale_y_log10(label=scales::dollar)+
+  scale_x_log10(label=scales::comma)+
+  #geom_vline(aes(xintercept=5e07))+
+  geom_smooth(method="lm")+
+  #geom_segment(aes(x=1000, xend=100000, y=10000, yend=1000000), lwd=2, col="green")+
+  #geom_segment(aes(x=1000, xend=100000, y=25000, yend=2500000), lwd=2, col="purple")+
+  #geom_curve(aes(x = ))
+  geom_abline(slope = 1, intercept=1.5, lwd=1.25, col="green")+
+  labs(x="Quantity - Cubic Yards", y="Gross Cost")
+```
+One more chart:
+- The blue line is a regression relationship.
+- The long green line is one that I fit "by eye".
+
+```{r}
+# veg_pred %>% 
+#   filter(Quantity > 10,
+#          Quantity < 1e07,
+#          Gross_Cost > 500,
+#          Gross_Cost < 3.1e09) %>% 
+#   ggplot(aes(y=Gross_Cost, x=Quantity))+
+#   geom_point()+
+#   scale_x_log10()+
+#   scale_y_log10()+
+#   #geom_vline(aes(xintercept=5e07))+
+#   #geom_smooth(method="loess")+
+#   #geom_abline(slope=25, intercept=1)
+#   geom_abline(slope = 1,  #for log format, log10(25) ~ 1.139
+#               intercept=1.5, # 0... 
+#               untf=T,
+#               col="orange",
+#               lwd=1.25)
+# 
+# veg_pred %>% 
+#   filter(Quantity > 10,
+#          Quantity < 1e07,
+#          Gross_Cost > 500,
+#          Gross_Cost < 3.1e09) %>% 
+#   lm(formula = Gross_Cost ~ Quantity)
+
+```
+
+### Fitting a Regression Line
+- The previous lines were fit "by eye". 
+- We can use regression to find *slope* and *intercept* for the relationship. 
+
+```{r echo=T}
+veg_model <- 
+veg_pred %>% 
+  filter(Quantity > 10,
+         Quantity < 1e07,
+         Gross_Cost > 500,
+         Gross_Cost < 3.1e09) %>% 
+  lm(formula = log10(Gross_Cost) ~ log10(Quantity))
+
+summary(veg_model)
+```
+
+The model is significant, with a reasonable R^2 fit. We can then turn this model into a formula using the slope intercept transformation of the regression coefficients. Note: these are log(10) transformed, but the function below puts a given quantity back to a dollar amount. 
+
+
+```{r echo=TRUE}
+veg_reg_formula <- function(Quantity){
+  10^(log10(Quantity)*.73076 + 2.58276)
+}
+```
+
+#### Example
+```{r echo=TRUE}
+dollar(veg_reg_formula(1000))
+```
+
+
+#### Formula Explained
+ - Slope intercept formula converted to log-log format is:
+ - $log10(Cost) = intercept + slope * log10(Quantity)$
+ - $log10(Cost) ~= 2.583 + .731 * log10(1000)$
+ - $59,571.70 = 2.583 + .731 * 3$
+
+Comparing this to the $25 per CY, where we have
+- $1000*25 - 25,000$
+
+We can build a comparison of the model based formula v. other formulas later. There is also a possibility of adding in further correlated variables as predictors to the model formula, such as:
+- average (historical) project cost per county
+- infrastructure value per county, population per county.
+
+
+#### Correlated Predictors (For Possible Future Iterations)
+ - Not many promising predictors at the moment...
+```{r echo=TRUE}
+#glimpse(veg_pred.m)
+
+cor.test(veg_pred.m$Gross_Cost, veg_pred.m$Quantity, method = "spearman")
+#rho=.75  #rank oreder corr
+
+cor.test(log10(veg_pred.m$Gross_Cost), log10(veg_pred.m$Quantity))
+#r = .73
+mean(veg_pred.m$Quantity)
+
+cor.test(scale(as.numeric(veg_pred.m$Population)), log(veg_pred.m$Quantity))
+cor.test(veg_pred$RESL_SCORE, log(1+veg_pred$Quantity))
+```
+
+## Const-Debris
+
+### The Data:
+Here is the Grants Manager data for construction debris removals, again aggregated to county level removals. If there are multiple projects sites for a removal, they are gathered up so each row representes a given Cat Work A - Sum of Quantity Removed and Sum of Cost of removal. 
+
+```{r}
+kable(cd_pred)%>% 
+    kable_styling(repeat_header_text = T, "striped", full_width = F) %>%
+    scroll_box(height = "650px")
+```
+
+### The Data Summary
+```{r}
+cd_pred_MT <- cd_pred %>% mutate(Cost_Yardage = Gross_Cost/Quantity)
+mean(cd_pred_MT$Cost_Yardage, trim=.1, na.rm=T)
+summary(cd_pred_MT$Cost_Yardage)
+```
+Minimum, Central Tendency and Quartile Points. The first quartile value 29 dollars, is close to the currently used value of **35 dollars** per yard of Construction Debris removal. 
+
+Median Cost is at 117 dollars. The Mean value is not calculated here, because projects with 0 values (for quantity) create an error. The trimmed mean (which removes the outlier/errors) is $319. 
+
+The Mean is skewed by extremely high cost projects. This is why we log (exponentially) scale quantity and cost in most of the analysis.
+
+### Viewing that summary:
+
+```{r}
+
+cd_pred_MT %>% 
+  mutate(R4 = ifelse(region==4,"R4","Other_Regions")) %>% 
+  ggplot(aes(x=Cost_Yardage))+
+  geom_histogram(bins=50)+
+  scale_x_log10(label=scales::dollar)+
+  geom_vline(aes(xintercept=35), lwd=1.25, col="orange")+
+  geom_label(aes(x=35, y=22.5, label="$35 per CY"))+
+  facet_wrap(~R4)
+
+```
+Again, we see that Region 4 looks similar to others, so we can attempt to use all the data in grants manager to fit a more robust relationship.
+
+
+### The Cost & Quantity Relationship
+- Here Region 4 is shown as a separate color, however, it is very similar to the spread of other projects.
+- Note: We have removed extreme outliers from this chart already.
+- This chart is **interactive** if you are viewing in your browser.
+
+```{r}
+cd_pred_MT %>% 
+  mutate(R4 = ifelse(region==4,"R4","Other_Regions")) %>% 
+filter(Quantity > 10, 
+       Gross_Cost < 1.25e08) %>% 
+    ggplot(aes(y=Gross_Cost, x=Quantity,
+               text=paste("Predicted Cost =", 
+                          dollar(10^(log10(Quantity) *.925 + 2.175))),
+               color=R4))+
+    geom_point()+
+    scale_y_log10(label=scales::dollar)+
+    scale_x_log10(label=scales::comma)+
+    #geom_vline(aes(xintercept=1e06), col='orange')+
+    #geom_smooth(method="loess")+
+    #geom_smooth(method="lm")+
+    geom_abline(slope = .925, intercept=2.175, lwd=1.25, col="green")+
+    geom_abline(slope = .925, intercept=2.175, lwd=1.25, col="green")+
+    
+  labs(title="Construction Debris", x="Quantity - Cubic Yards", y="Gross Cost",
+         caption = "Line plotted to fit the cost per yard relationship") ->
+  cy_plot
+
+#cy_plot
+library(plotly)
+ggplotly(cy_plot)
+```
+
+### Formulas Explained
+ - Just like for Vegetative Debris, I've fit a line through this data cloud, and the converted that to a formula that can be used to estimate costs.
+ - Slope intercept formula converted to log-log format is:
+  - $log10(y) = intercept + slope * log10(x)$
+ - Example for 10000 Cubic Yards
+  - $log10(10000) ~= 2.175 + .925 * log10(100)$
+  - $4 ~= 2.175 + .925 * 2$
+
+(Actual answer for 100 cubic yards = 4.025, so 10^4.025 = $10592.54
+Formula for CY
+$10^ (log10(Cubic Yards) *.925 + 2.175)$
+
+
+Note: I fit this relationship... with an eye test. An actual regression relationship fit to this is... below. The numbers come out slightly different, but it's a reasonable approximation.
+
+### Regression Fitting
+  
+```{r echo=TRUE}
+cd_model <- cd_pred_MT %>% 
+filter(Quantity > 10, 
+       Gross_Cost < 1.25e08,
+       is.na(Quantity)==FALSE,
+       is.na(Gross_Cost)==FALSE) %>% 
+    lm(formula = log10(1+Gross_Cost) ~ log10(1+Quantity))
+
+summary(cd_model)
+```
+
+Notes:
+- The model is *okay. SIgnificant fit, moderate R^2. 
+- There is a lot of variance in trying to fit a single straight line through the widely disperesed cloud, so on either end, we have large residiuals (the difference between the line and data points).
+- A formula derived from this could be good **in the aggregate** but could be off by a lot for individual predictions.
+
+
+### Creating Functions to Show the Estimates
+```{r echo=TRUE}
+cy_eye_formula <- function(CY){
+  10^ (log10(CY) *.925 + 2.175)
+}
+
+cy_reg_formula <- function(CY){
+  10^(log10(CY)*0.54892  + 3.56817)
+}
+
+cy_reg_formula(100)
+#46345.76
+cy_eye_formula(100)
+#10592.54
+```
+
+### The differences in how these two relationships predict:
+```{r}
+simul <- data.frame("CY"=seq(0,50000,100))
+simul$reg_preds <- cy_reg_formula(simul$CY)
+simul$eye_preds <- cy_eye_formula(simul$CY)
+
+ggplot(simul, aes(x=CY))+
+  geom_point(aes(y=reg_preds),col="blue")+
+  geom_point(aes(y=eye_preds),col="red")+
+  scale_y_log10(label=scales::dollar)+
+  scale_x_log10(label=scales::comma)
+  
+```
+
+- If we want to choose one that **undershoots costs** - we can go with Blue line.
+- This is what our Region 4 POCs preferred, as they would rather **underestimate costs** since this is being used in pre-declaration assessment to determine if a given county **will get declared or not**.
+
+### Formula Predictions v Actuals
+
+```{r}
+cd_pred_MT$eye_preds <- cy_eye_formula(cd_pred_MT$Quantity)
+cd_pred_MT$reg_preds <- cy_reg_formula(cd_pred_MT$Quantity)
+
+cd_pred_MT %>% 
+filter(Quantity > 10, 
+       Gross_Cost < 1.25e08) %>% 
+    ggplot(aes(x=Quantity,
+               text=paste("Predicted Cost =", 
+                          dollar(10^(log10(Quantity) *.925 + 2.175)))))+
+  geom_point(aes(y=Gross_Cost))+  
+  geom_point(aes(y=reg_preds),col="blue")+
+    geom_point(aes(y=eye_preds),col="red")+
+    scale_y_log10(label=scales::dollar)+
+    scale_x_log10(label=scales::comma)+
+  labs(title="Actuals against Formula Predicted Values",
+       subtitle="Blue = Regression | Red = EYE Formula") -> 
+  prediction.chart
+
+ggplotly(prediction.chart)
+```
+
+#### Notes: 
+- The blue line is the 'Regression Predictions' (reg_preds)', red line is the 'Eye Prediction' (eye_pred)
+- The chart is interactive.
+- They are slightly differently balanced, in my opinion, the eye prediction formula should be preferred under 500-8000 Cubic Yards of quantity, then the regression predictor satisfies Region 4's approach better at higher numbers of Cubic Yardage to be removed.
+- The formula promoted in the **BLUF** section uses the **regression formula**. 
+
+__________________________
+
+## Appendix
+
+_________________________________________________________
+_________________________________________________________
+### Assessing Historials as Predictors in Complex Model
+```{r, echo=TRUE}
+# load(file="historicals.rda")
+# #glimpse(hist)
+# names(hist) <- gsub(names(hist), pattern = " ", replacement = "_")
+# hist[,3:51] <- lapply(hist[,3:51],FUN = as.numeric)
+# 
+# veg_pred.m.hist <- left_join(veg_pred.m, hist, by="FIPS")
+# veg_pred.m.hist$year <- factor(veg_pred.m.hist$year, ordered=T)
+# veg_pred.m.hist$USPS <- factor(veg_pred.m.hist$USPS, ordered=F)
+# 
+# cor.test(veg_pred.m.hist$Gross_Cost, veg_pred.m.hist$`Historical_Vegetative_75th_Quantile_Gross_Cost.75%`)
+# #0.24, fairly weak...
+# 
+# #library(lme4)
+# veg_multi_mod <- 
+#   veg_pred.m.hist %>% filter(
+#     Quantity > 10,
+#     Gross_Cost > 500,
+#     Gross_Cost < 1e07) %>% 
+#   lme4::lmer(formula = log10(Gross_Cost) ~ log10(Quantity) +
+#              `Historical_Vegetative_75th_Quantile_Gross_Cost.75%` 
+#              + year
+#              + (1|USPS))
+# 
+# summary(veg_multi_mod)
+# 
+# 
+# #veg_lm_mod_state <- 
+# #  veg_pred.m.hist %>% filter(
+# #    Quantity > 10,
+# #    Gross_Cost > 500,
+# #    Gross_Cost < 1e07) %>% 
+# #  lm(formula = log10(Gross_Cost) ~ log10(Quantity) + USPS)
+# 
+# #summary(veg_lm_mod_state)  # state not a useful variable. 
+```
+
+Successful modeling, but not really adding much of significance. Would need to evalauate a larger field of predictors, particularly those that don't come from GM (cross contamination data, since the 75th for costs are some composite from the predictand anyway...)
+
+```{r, echo=TRUE}
+# piecewiseSEM::rsquared(veg_multi_mod) 
+# piecewiseSEM::rsquared(veg_model)
+```
+#LOWER RSQUARED than the simple model, no reason to do a complex process for what we may *think* (but can't really prove) are different, nested structures influencing this process.  States/Counties are more alike than different... is the simple conclusion. 
+
+
+```{r}
+#install.packages("moderndive")
+# library(moderndive)
+# 
+# veg_pred.m.hist %>% filter(
+#     Quantity > 10,
+#     Gross_Cost > 500,
+#     Gross_Cost < 1e07) %>% 
+#   ggplot(aes(y=log10(Gross_Cost), x = log10(Quantity), color=USPS, group = USPS))+
+#   geom_point()+
+#   geom_parallel_slopes(se=FALSE)
+
+```
+The idea here would be to have **separate intercepts** for each state (or if we could get down to it... each **county**) as R4 would like multipliers or factors for **states and counties** where the number is higher... lower etc...
+
+At least in this model, the differences aren't too meaningful. 
+
+____________________________________________________________________
+____________________________________________________________________
+
+### Additional Data Views and Visualization.
+
+#### Project Based Aggregation and Exploration
+```{r echo=TRUE}
+# load("input_tables/Vegetative_Debris_CY_Debris_Data_By_Applicant_Project_Id.rda", verbose=T)
+# glimpse(CY_Debris_Data_By_Applicant_Project_Id)
+# 
+# veg_stat <- CY_Debris_Data_By_Applicant_Project_Id %>% 
+#   group_by(State, County, Applicant_Project_Id) %>% summarise(
+#     .groups = "keep",
+#     Gross_Cost = max(Gross_Cost, na.rm=T),
+#     Quantity = sum(Quantity, na.rm=T)
+#   ) %>% 
+#   ungroup()
+# glimpse(veg_stat)
+```
+
+
+```{r}
+# veg_stat %>% 
+#   filter(Quantity > 10,
+#   #       Quantity < 5e07,
+#          Gross_Cost > 500) %>% 
+#   ggplot(aes(y=Gross_Cost, x=Quantity))+
+#   geom_point()+
+#   scale_y_log10(label=scales::dollar)+
+#   scale_x_log10(label=scales::comma)+
+#   #geom_vline(aes(xintercept=5e07))+
+#   geom_smooth(method="lm")+
+#   geom_segment(aes(x=1000, xend=100000, y=10000, yend=1000000), lwd=2, col="green")+
+#   geom_segment(aes(x=1000, xend=100000, y=250000, yend=2500000), lwd=2, col="purple")+
+#   #geom_curve(aes(x = ))
+#   geom_abline(slope = 1.1, intercept=0)+
+#   labs(x="Quantity - Cubic Yards", y="Gross Cost")
+
+```
+
+CTA: Previous work made this look like an exponential or power law relationship, attempting to fix exponential/poly models and see how close they fit the line, could use that as a **product** for the R4 group. (There is still a large error term..)
+
+Look at fitting various exponential relationships
+```{r}
+# xy <- veg_stat %>% 
+#     filter(Quantity > 10,
+#            Quantity < 5e07,
+#          Gross_Cost > 500) %>% 
+#     rename("x" = Gross_Cost, "y"=Quantity)
+# 
+# mdl1 <- lm(y ~ x, data = xy)
+# mdl2 <- lm(y ~ x + I(x^2), data = xy)
+# mdl3 <- lm(y ~ x + I(x^2) + I(x^3), data = xy)
+# mdl4 <- lm(y ~ I(x^2), data = xy)
+# 
+# #prd <- data.frame(x = seq(0, 50, by = 0.5))
+# 
+# result <- xy
+# result$mdl1 <- as.vector(predict(mdl1, newdata = xy))
+# result$mdl2 <- as.vector(predict(mdl2, newdata = xy))
+# result$mdl3 <- as.vector(predict(mdl3, newdata = xy))
+# result$mdl4 <- as.vector(predict(mdl4, newdata = xy))
+# #result$_lmm <- as
+# 
+# 
+# result_long <-  tidyr::pivot_longer(data=result, cols = 5:9, names_to ="models")
+# 
+# ggplot(result_long, aes(x = x, y = value, color=models)) +
+#   theme_bw() +
+#   scale_x_log10()+
+#     scale_y_log10()+
+#   geom_point()
+# 
+#   geom_point(data = xy, aes(x = x, y = y)) +
+#   geom_line(aes(colour = models), size = 1)
+
+```
+
+
+
+```{r}
+## Veg Debris Table Plotting...
+# 
+# stat_tbl.mut %>% 
+#   filter(Quantity > 10,
+#          Gross_Cost > 500) %>% 
+#   ggplot(aes(x=Gross_Cost, y=Quantity))+
+#   geom_point()+
+#   scale_x_log10()+
+#   scale_y_log10()+
+#   geom_vline(aes(xintercept=5e07))+
+#   geom_smooth(method="loess")
+
+```
