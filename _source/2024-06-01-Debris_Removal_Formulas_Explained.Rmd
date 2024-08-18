@@ -1,7 +1,7 @@
 ---
 title: "R4_Debris_Removal_Formulas_Exploration"
 author: "Colin T. Annand"
-date: "2024-06"
+date: "2024-06-01"
 always_allow_html: true
 output:
   md_document:
