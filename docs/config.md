@@ -302,8 +302,8 @@ It consists of the name of the social network as key and your username within th
 # file: `_config.yml`
 author:
   social:
-    twitter: qwtel
-    github:  qwtel
+    twitter: A12345
+    github:  A12345
 ~~~
 
 Check out [`authors.yml`][authors] to see which networks are available.
