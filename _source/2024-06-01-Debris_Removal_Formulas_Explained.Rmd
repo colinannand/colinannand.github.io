@@ -1,7 +1,7 @@
 ---
 title: "R4_Debris_Removal_Formulas_Exploration"
 author: "Colin T. Annand"
-date: "2024-06-01"
+date: "2024-06-30"
 always_allow_html: true
 output:
   md_document:
@@ -21,7 +21,7 @@ categories:
 knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
 lapply(c("dplyr","ggplot2","scales", "rmdformats", "kableExtra"), FUN=library, character.only=TRUE, quietly=TRUE)
 
-base_dir <- "~/Users/cannand/GitHub/colinannand.github.io" # i.e. where the jekyll blog is on the hard drive.
+base_dir <- "/Users/cannand/GitHub/colinannand.github.io" # i.e. where the jekyll blog is on the hard drive.
 base_url <- "/" # keep as is
 fig_path <- "images/" # customize to heart's content, I 'spose.
 
