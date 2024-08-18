@@ -8,7 +8,7 @@ output:
     variant: gfm
     preserve_yaml: TRUE
 knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../_posts") })
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../projects/_posts") })
 description: "Work from a FEMA short suspense analysis."
 layout: post
 categories:

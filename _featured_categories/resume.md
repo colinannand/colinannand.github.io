@@ -18,7 +18,7 @@ sitemap: true
 
 <table>
 <tbody>
-<tr><th><p>COLIN</p><p>ANNAND</p></th><th><p> | www.linkedin.com/in/colin-annand</p><p>| 732.991.1541 <a href="mailto:cta_resume@dispatch.mozmail.com">|cta_resume@dispatch.mozmail.com</a></p></th></tr><tr><td colspan="2">
+<tr><th><p>COLIN</p><p>ANNAND</p></th><th><p> | www.linkedin.com/in/colin-annand</p><p>|<a href="mailto:cta_resume@dispatch.mozmail.com"> cta_resume@dispatch.mozmail.com</a></p></th></tr><tr><td colspan="2">
 <p>Analytical, knowledgable, problem-solving statistician, coder, scientist with Federal and academic expertise and experience across multiple fields. Collaborative team player with project management skills and a track record of delivering the highest quality analytic and strategic solutions to resolve challenges and achieve business goals.</p></td></tr><tr><td colspan="2">
 <h1>Experience</h1>
 <h2>Federal Emergency Management Agency</h2>
