@@ -1,7 +1,7 @@
 ---
-title: "R4_Debris_Removal_Formulas_Exploration"
+title: "R4_Debris_Removal_Formulas_Exploration_Interactive"
 author: "Colin T. Annand"
-date: "2024-06-30"
+date: "2024-07-07"
 always_allow_html: true
 output:
   md_document:
@@ -360,7 +360,7 @@ Again, we see that Region 4 looks similar to others, so we can attempt to use al
 ### The Cost & Quantity Relationship
 - Here Region 4 is shown as a separate color, however, it is very similar to the spread of other projects.
 - Note: We have removed extreme outliers from this chart already.
-- This chart is **interactive** if you are viewing in your browser.
+- This chart is **interactive** if you are viewing in your browser (maybe). 
 
 ```{r}
 cd_pred_MT %>% 
@@ -386,8 +386,24 @@ filter(Quantity > 10,
 
 #cy_plot
 library(plotly)
-ggplotly(cy_plot)
+ggplotly(cy_plot) #note, this renders in the Renviron/GUI, but not on markdown, the commented code below includes the chart. 
+
+library(htmlwidgets)
+cy_widget <- partial_bundle(ggplotly(cy_plot))
+#saveWidget(widget = cy_widget, "../images/html/cyplot1.html", selfcontained = T)
+widgetframe::frameWidget(cy_widget)
 ```
+
+```{r}
+htmltools::tags$iframe(
+  src = "../images/html/cyplot1.html",
+  scrolling= "no",
+  seamless = "seamless",
+  frameBorder = "0"
+)
+```
+
+
 
 ### Formulas Explained
  - Just like for Vegetative Debris, I've fit a line through this data cloud, and the converted that to a formula that can be used to estimate costs.

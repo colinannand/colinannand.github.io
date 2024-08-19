@@ -11,7 +11,8 @@ knit: (function(inputFile, encoding) {
 description: "Work from a FEMA short suspense analysis."
 layout: post
 categories:
-  - Code Snippets
+  - R Markdown
+  - Jekyll    
 ---
 
 ```{r setup, include=FALSE, echo=FALSE}
