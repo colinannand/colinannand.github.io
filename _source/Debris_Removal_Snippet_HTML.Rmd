@@ -1,0 +1,90 @@
+---
+title: "R4_Debris_Removal_Snippet_HTML"
+date: "2024-08-01"
+always_allow_html: true
+output:
+  md_document:
+    variant: gfm
+    preserve_yaml: TRUE
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../projects/_posts") })
+description: "Work from a FEMA short suspense analysis."
+layout: post
+categories:
+  - Code Snippets
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
+lapply(c("dplyr","ggplot2","scales", "rmdformats", "kableExtra"), FUN=library, character.only=TRUE, quietly=TRUE)
+
+base_dir <- "/Users/cannand/GitHub/colinannand.github.io" # i.e. where the jekyll blog is on the hard drive.
+base_url <- "/" # keep as is
+fig_path <- "images/" # customize to heart's content, I 'spose.
+
+knitr::opts_knit$set(base.dir = base_dir, base.url = base_url)
+knitr::opts_chunk$set(fig.path = fig_path,
+                      cache.path = '../cache/',
+                      message=FALSE, warning=FALSE,
+                      cache = TRUE) 
+
+
+```
+
+
+```{r echo=FALSE}
+load("../extdata/Non-PII-Debris-Data.Rdata", verbose=F)
+```
+
+```{r}
+cd_pred_MT <- cd_pred %>% mutate(Cost_Yardage = Gross_Cost/Quantity)
+
+cd_pred_MT %>% 
+  mutate(R4 = ifelse(region==4,"R4","Other_Regions")) %>% 
+filter(Quantity > 10, 
+       Gross_Cost < 1.25e08) %>% 
+    ggplot(aes(y=Gross_Cost, x=Quantity,
+               text=paste("Predicted Cost =", 
+                          dollar(10^(log10(Quantity) *.925 + 2.175))),
+               color=R4))+
+    geom_point()+
+    scale_y_log10(label=scales::dollar)+
+    scale_x_log10(label=scales::comma)+
+    #geom_vline(aes(xintercept=1e06), col='orange')+
+    #geom_smooth(method="loess")+
+    #geom_smooth(method="lm")+
+    geom_abline(slope = .925, intercept=2.175, lwd=1.25, col="green")+
+    geom_abline(slope = .925, intercept=2.175, lwd=1.25, col="green")+
+    
+  labs(title="Construction Debris", x="Quantity - Cubic Yards", y="Gross Cost",
+         caption = "Line plotted to fit the cost per yard relationship") ->
+  cy_plot
+
+#cy_plot
+library(plotly)
+ggplotly(cy_plot)
+```
+### Plot with Widget
+```{r}
+#install.packages("htmlwidgets")
+library(htmlwidgets)
+library(htmltools)
+
+#dir.create("../images/html")
+
+#cy_plot
+#ggplotly(cy_plot) #note, this renders in the Renviron/GUI, but not on markdown, the commented code below includes the chart. 
+
+library(htmlwidgets)
+cy_widget <- partial_bundle(ggplotly(cy_plot))
+#saveWidget(widget = cy_widget, "../images/html/cyplot1.html", selfcontained = T)
+widgetframe::frameWidget(cy_widget)
+```
+
+## Example plot with Widget
+```{r}
+p <- plot_ly(x = 1:10, y = 1:10) %>% add_markers()
+
+widgetframe::frameWidget(p)
+```
+
