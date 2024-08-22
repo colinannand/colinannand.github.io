@@ -1,0 +1,331 @@
+---
+title: "Tribal FMAG - Data Contextualization"
+author: "Colin T. Annand for RAD-SPAS"
+date: "2024-05-13"
+output:
+  rmdformats::html_clean:
+    highlight: haddock
+    toc: TRUE
+    toc_depth: 3
+    toc_float: TRUE
+    number_sections: TRUE
+    thumbnails: FALSE
+    code_folding: hide
+    df_print: paged
+    DT: datatable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+lapply(c("dplyr","tidyr","ggplot2", "plotly", "lubridate","tufte","kableExtra","scales","ggthemes","data.table", "rmdformats","readr"), FUN=library, character.only=TRUE, quietly=TRUE)
+```
+
+```{r fig.margin=FALSE, fig.width = 1, fig.height = 1,  warning=FALSE, message=FALSE, cache=TRUE, echo=FALSE}
+knitr::include_graphics("fema-logo-blue.svg")
+```
+
+# Brief
+- The FMAG Program Office is seeking assistance in determining a fire cost threshold (FCT) for Tribal Nations under the FMAG Program.
+- Similarly to a recent policy decision in reducing the monetary threshold for major disaster declarations with Public Assistance from $250K to $100K for Tribal Nations.
+- **PA Division Director Pesapane** recommended reaching out to us regarding this issue.
+
+## Discussion Notes
+- *5/15/2024 with Hart Gillespie and SPAS*
+- Tribal Nations can only serve as a recipient after the **State** has met the FMAG threshold. 
+- Are we (FEMA) applying a more stringent policy restriction than required by regulation?
+- Can we remove the language prohibiting a **Tribal Nation** being a *recipient* without the State meeting the FMAG threshold
+- It is **quite rare** (1-2 occurences) of a state **NOT** meeting the threshold. So the individual thresholds are the more stringent portion of policy. 
+ - FMAG Funds are available, and then
+
+## Goal:
+- What a comparable threshold would be for **Tribal Nations** or should a threshold be waived, in respect to TN operating as a recipient for FMAG. 
+- Tribal operations are usually around a 10th of the size of county/state operations, so even the 'lowest' *individual* FCT of $100,000 might be reduced to around $10,000. 
+ 
+
+## Data
+```{r data read in}
+fida34787 <- read_csv("tables/FIDA_34787_PA_PDA .xlsx", skip=6)
+threshold_fire_2024 <- readxl::read_xls("tables/CY24 FCT.xls", skip=1)
+#PA_tribal <- read_csv("tables/PA_Tribal.csv")  #extraneous
+```
+
+```{r CTA functions, echo=FALSE, include=FALSE}
+#for viz
+.simpleCap <- function(x) {
+    s <- strsplit(x, " ")[[1]]
+    paste(toupper(substring(s, 1, 1)), substring(s, 2),
+          sep = "", collapse = " ")
+}
+
+```
+
+
+### Fire Cost Thresholds
+ - Individual and Cumulative Levels
+ - Either the greater of $100,000 or 3 times the *per capita threshold*.
+
+```{r display FCT data, echo=FALSE}
+
+threshold_fire_2024[,1:4] %>%
+  mutate(`INDIVIDUAL THRESHOLD` = dollar(`INDIVIDUAL THRESHOLD`),
+        `CUMULATIVE THRESHOLD` = dollar(`CUMULATIVE THRESHOLD`),
+        `2020 Population` = comma(`2020 Population`)) %>%
+  kable %>% 
+    kable_styling("striped", full_width = F, font_size = 14) %>%
+    scroll_box(width = "800px", height = "350px")
+```
+ 
+### FMAG Data
+- **Dates: 1988 - 2022**
+- There are only two Tribal Independent (Recipient and Applicant) FMAG declarations in this data set. 
+- Additional data was garnered by text searching applicant names which matched the following strings: <br>"Tribe|Nation|Band|Native|Indian|Reserv|TDSA|OTSA|Pueblo|Choctaw|Navajo"<br> and manually removing incorrect matches. 
+- These declarations are FMAGs where a Tribal Nation is operating as sub-recipient to a state. 
+
+```{r}
+### FMAG SPECIFIC data
+fmag <- readxl::read_xlsx("tables/fmags.xlsx")
+fmag <- data.table(fmag) 
+
+fmag %>% #show data
+  kable %>% 
+    kable_styling("striped", full_width = F, font_size = 14) %>%
+    scroll_box(width = "800px", height = "350px")
+```
+
+#### What number of applicants within this data is listed as Tribal (Applicant and Recipient)?
+
+```{r}
+table(ifelse(fmag$IS_TRIBAL==1, "Tribal", "Other"))
+```
+- This is a small number of tribes.
+- Utilizing text searching of Applicant Names below to get a more complete list of tribal applicants (sub-recipients under states)
+
+```{r}
+#Two INCIDENTS - DR 2478 (2003-07), 2429 (2002-06)
+fmag.tribe <- fmag[IS_TRIBAL==1]
+
+fmag.tribe %>% #show data
+  kable %>% 
+    kable_styling("striped", full_width = F, font_size = 14) %>%
+    scroll_box(width = "800px", height = "350px")
+```
+
+```{r}
+#tribal text searching of applicant names
+fmag.TAG <- fmag %>% 
+  mutate(Tribe_TAG = 
+           ifelse(grepl("Tribe|Nation|Band|Native|Indian|Reserv|TDSA|OTSA|Pueblo|Choctaw|Navajo",
+                        APPLICANT_NAME, ignore.case = T)==TRUE, yes = "Tribe", no="Other")) 
+
+fmag.TAG$Tribe_TAG[which(fmag.TAG$APPLICANT_NAME=="KY NATIONAL GUARD")] <- "Other"
+```
+
+What number of FMAGs include Tribes with this method?
+
+```{r}
+length(unique(fmag.TAG$DISASTER_NUMBER[fmag.TAG$Tribe_TAG=="Tribe"])) 
+```
+
+```{r}
+fmag.TAG.tribe <- 
+  fmag.TAG %>% 
+  filter(Tribe_TAG == "Tribe")
+
+fmag.TAG.tribe %>% 
+  kable %>% #show data
+    kable_styling("striped", full_width = F, font_size = 14) %>%
+    scroll_box(width = "800px", height = "350px")
+```
+- This is a larger selection of tribes, and while these are not *independent applicants*, they provide a better sample than the 2 specific declarations we have. 
+
+
+# Threshold Methods
+
+- Below we attempt to find a **proportional threshold** for FMAGs involving Tribes.
+- First a visualization of the Total FMAG Spending for Tribes (as selected above) and Others.
+
+```{r}
+# Aggregation of data to specific FMAG Events.
+fmag.agg <- 
+fmag %>% 
+  mutate(Tribe_TAG = 
+           ifelse(grepl("Tribe|Nation|Band|Native|Indian|Reserv|TDSA|OTSA|Pueblo|Choctaw|Navajo",
+                        APPLICANT_NAME, ignore.case = T)==TRUE, yes = "Tribe", no="Other")) %>% 
+    filter(APPLICANT_NAME != "KY NATIONAL GUARD") %>% 
+  group_by(Tribe_TAG, DISASTER_NUMBER) %>% 
+  summarise(STATE=STATE[1],
+            APPLICANT_NAME = .simpleCap(tolower(APPLICANT_NAME[1])),
+            Total_DR_Cost = sum(PROJECT_AMOUNT, na.rm=T),
+            Num_Projects = n())
+
+#join to FCT Threshold data
+fmag.agg <- left_join(fmag.agg, threshold_fire_2024[,1:4], by="STATE")
+
+#fix names
+names(fmag.agg) <- gsub(x = names(fmag.agg), pattern=" ", replacement = "_")
+
+#Create a "ratio" between total costs and thresholds.
+fmag.agg <- fmag.agg %>% mutate(
+  Ratio = Total_DR_Cost / CUMULATIVE_THRESHOLD)
+
+
+cumulative_ratio <- mean(fmag.agg$Ratio,trim = .2)
+#1.18 - so this is not useful for PDA...
+# Need to get a PDA cost, rather than the threshold, becuase this is always exceeded. Can think about applying the same "over" ratio tho...
+```
+
+## Breakdown of FMAG Aggregated Data
+```{r}
+fmag.agg %>% 
+  group_by(Tribe_TAG) %>% 
+  summarise(
+            Total_FMAGs = n(),
+            Total_Spending = dollar(round(sum(Total_DR_Cost))),
+            Highest_Cost = dollar(max(Total_DR_Cost)),
+            Lowest_Cost = dollar(min(Total_DR_Cost))) %>% 
+  kable %>% 
+    kable_styling("striped", full_width = F, font_size = 14)
+```
+
+
+## Visualizing FMAG Incidents
+ - Note, this chart is interactive if you opened the file in your *browser*. 
+```{r echo=FALSE, warning=FALSE, fig.full.width=TRUE, fig.width=10, fig.height=6}
+fmag.agg %>% 
+  ggplot(aes(x=Tribe_TAG, y=Total_DR_Cost,
+             color=Tribe_TAG,
+             fill=Tribe_TAG))+
+  geom_jitter(aes(size = Num_Projects,
+                  text = paste(
+    "FMAG:", DISASTER_NUMBER, "<br>",
+    APPLICANT_NAME, "<br>",
+    "Total:", dollar(round(Total_DR_Cost,0))
+    )))+
+  geom_boxplot(alpha=.25, outlier.shape = NA, color="black")+
+  scale_y_log10(labels=dollar)+
+  labs(title = "FMAG Disaster Level Costs",
+       subtitle = "each dot a Disaster (aggregation of State or Tribe projects)",
+       y= "$ Cost of Total Projects",
+       x="",
+       caption="Tribes identified by text search, not independent DRs") ->
+  plot.fmag.DR.tribe
+
+ggplotly(plot.fmag.DR.tribe, tooltip = "text")
+```
+- Each dot is an FM Incident (aggregation of all State or Tribe projects under one specific FMAG number). 
+- States on the left in Red, Tribes on the right in blue. 
+- The box gives the 'typical range' of FMAG incidents (obscured by the large number of points for States)
+- In general, tribal FMAG activity looks like a 'scaled down' version of State/Terr activity. 
+- Note: the lowest individual threshold of **$100,000** would screen out all but a few Tribal Nations if they were applying *independently* as opposed to as subrecipients under a state.
+
+
+## Crafting a Threshold
+- Using ratios of State Spending to the State Threshold (Cumulative)
+- Calculating a 'Tribe Threshold' with that same ratio, giving a *proportional* number. 
+```{r}
+# Take the median (50%) DR costs for STATES. 
+state_median <- median(fmag.agg$Total_DR_Cost[fmag.agg$Tribe_TAG!="Tribe"])
+#'Median FMAG Cost for States is $614,573'
+
+# Divide the median by the lowest Cumulative Threshold (could also use the median of State Thresholds...) $100,000
+ratio <- 100000 / state_median
+
+#1e06/state_median #the disaster threshold is set at %5, median of total costs across counties 
+#0.049
+
+tribal_median <- median(fmag.agg$Total_DR_Cost[fmag.agg$Tribe_TAG=="Tribe"])
+#'Median FMAG Cost for Tribes is $139,811'
+
+print(paste(
+  "Using the ratio of threshold to median cost for FMAG decs, the lower bound for Tribal FMAG activity is",
+dollar(tribal_median*ratio), "while the higher bound calculated using the Cumulative threshold is",
+dollar(tribal_median*cumulative_ratio)))
+
+```
+- Median FMAG Cost for States is **$614,573**.
+- Median FMAG Cost for Tribes is **$139,811**.
+- Using a ratio from the *lowest* Individual Threshold, a *proportionate* Individual Threshold for Tribal nations is **$5,723**.
+- Using a ratio derived from DR Cost / Cumulative Thresholds (per state) The *proportionate* Cumulative Threshold for Tribal Nations is **$13469.43**.
+
+## Analytic Takeaway
+There is a small slice of data specific to Tribal Nations within the FMAG universe. Any takeaway from this data contextualization should be appraised cautiously, however a general threshold range of:
+- $5,700 to $13,500 
+- Could be considered about proportional to the individual/cumulative State thresholds for FMAG funding. 
+- While there are other ways to calculate the threshold, this range **illustrates** the low floor (as seen in specific Tribal FMAG activity). 
+- Indeed, a threshold of 5,700 would actually have screened out at least one lower cost FMAG for a tribe (*Sycuan Indian Reservation* hover over the tribal points in the chart to see the values)
+
+
+
+# Appendix
+Further tables with costs, the distribution of projects, and futher data is listed below:
+
+## Additional Plots
+
+### Total Spending for Tribal FMAG
+```{r}
+fmag.agg %>% 
+  group_by(Tribe_TAG) %>% 
+  summarise(
+            Total_FMAGs = n(),
+            Total_Spending = dollar(round(sum(Total_DR_Cost))),
+            Highest_Cost = dollar(max(Total_DR_Cost)),
+            Lowest_Cost = dollar(min(Total_DR_Cost))) %>% 
+  kable %>% 
+    kable_styling("striped", full_width = F, font_size = 14)
+```
+
+
+### Distribution of Project Level Costs between Other and Tribes
+```{r echo=FALSE, warning=FALSE, fig.width=10, fig.height=6}
+
+fmag %>% 
+  mutate(Tribe_TAG = 
+           ifelse(grepl("Tribe|Nation|Band|Native|Indian|Reserv|TDSA|OTSA|Pueblo|Choctaw|Navajo",
+                        APPLICANT_NAME, ignore.case = T)==TRUE, yes = "Tribe", no="Other")) %>%
+  filter(APPLICANT_NAME != "KY NATIONAL GUARD") %>% 
+  ggplot(aes(x=Tribe_TAG, y=PROJECT_AMOUNT,
+             color=Tribe_TAG,
+             fill=Tribe_TAG))+
+  geom_jitter(aes(text = paste(
+    APPLICANT_NAME, "<br>",
+    "Total:", dollar(round(PROJECT_AMOUNT,0))
+    )))+
+  geom_boxplot(alpha=.75, outlier.shape = NA, color="black")+
+  scale_y_log10(labels=dollar)+
+  labs(title = "FEMA Project Level Costs",
+       caption = "each dot a State or Tribe project",
+       y= "$ Individual Project Costs",
+       x="") -> 
+  plot.fmag.proj.tribe
+
+library(plotly)
+ggplotly(plot.fmag.proj.tribe, tooltip = "text")
+
+```
+
+## Data Provided
+-The following code takes the tables used in this analysis and converts them to a single .xlsx file for user reference:
+```{r}
+Tribal_FMAG_SPAS_data <- list(
+  "FMAG_Applicants_1988-2022_raw" = fmag,
+  "FMAG_Applicants_Tagged" = fmag.TAG,
+  "FMAG_Tribal_Only" = fmag.TAG.tribe,
+  "FMAG_Aggregated_Dec" = fmag.agg)
+
+#writexl::write_xlsx(
+#  x = Tribal_FMAG_SPAS_data, 
+#  path =  "tables/Tribal_FMAG_SPAS_data.xlsx")
+```
+
+
+## openFEMA Data
+- National Delivery Model 2017-Current
+```{r}
+decs <- readr::read_csv("DisasterDeclarationsSummaries (1).csv")
+
+table(ifelse(decs$tribalRequest==1, "Tribe", "Other"), decs$declarationType)
+```
+- Open FEMA doesn't actually list Tribal Declarations under FMAG. This corresponds with the data above, where the **Independent** (Tribe as Applicant and Recipient) declarations were previous to 2003.
+- These occured in Nevada, likely because Nevada was the sole state which **bore the cost of FMAG activity** instead of having the recipient do so, so most Tribes would prefer to apply under states. 
+
+

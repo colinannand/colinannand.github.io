@@ -1,0 +1,794 @@
+---
+title: "100k Tribal Threshold Contextualization"
+author: "Colin T. Annand"
+date: "2024-05-02"
+always_allow_html: true
+output:
+  md_document:
+    variant: gfm
+    preserve_yaml: TRUE
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../projects/_posts") })
+description: "Follow-up on an extended project @FEMA."
+layout: post
+categories:
+  - R Markdown
+  - Jekyll    
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+lapply(c("dplyr","ggplot2","scales", "rmdformats", "kableExtra"), FUN=library, character.only=TRUE, quietly=TRUE)
+
+base_dir <- "/Users/cannand/GitHub/colinannand.github.io" # i.e. where the jekyll blog is on the hard drive.
+base_url <- "/" # keep as is
+fig_path <- "images/" # customize to heart's content, I 'spose.
+
+knitr::opts_knit$set(base.dir = base_dir, base.url = base_url)
+knitr::opts_chunk$set(fig.path = fig_path,
+                      cache.path = '../cache/',
+                      message=FALSE, warning=FALSE,
+                      cache = TRUE) 
+
+
+```
+
+
+```{r fig.margin=TRUE, fig.width = 1, fig.height = 1,  warning=FALSE, message=FALSE, cache=TRUE, echo=FALSE}
+knitr::include_graphics("../images/fema_logo_circle.png")
+```
+
+# \_\_\_\_\_
+
+# BLUF
+
+## Changes to the *threshold policy* would likely mean more Tribes applying directly, and data **indicates low chance of substantial increases in overall declared disasters**.
+
+-   There are 37 Declarations involving tribes (non-COVID, non-EM) under the National Delivery Model (2017-2023).
+- 23 are *independent* Tribal Declarations, where a tribal nation is applicant and recipient.
+- 14 are State Declarations, where a tribal nation is recipient, but not applicant.
+-   These are in Regions 4, 6, 7, 8, 9, 10.
+-   Regions *typically* see 0 to 1 Tribal declarations in a year, with R6, R8 and R9
+    having higher trends (0 to 2 or 4 declarations at peak).
+-   There are few Tribal PDAs between the 100k-250k range, meaning a few more tribes may
+    apply independently.
+-   Limited data, but no evidence of turndowns for tribes related to a change in the
+    100-250k range.
+
+## Historic Tables and Estimating Future Years
+
+The following tables show historic, estimated, and estimated + substantive increase in
+trends of *direct* Tribal Declarations. Data details and methods are summarized in side
+notes, with full details in the section below. [^1]
+
+[^1]: Section 2. Distribution of Tribal Declarations
+
+```{r, echo = FALSE, include=FALSE}
+lapply(c("dplyr","tidyr","ggplot2","lubridate","tufte","kableExtra","scales","ggthemes"), FUN=library, character.only=TRUE, quietly=TRUE)
+#load("tribal_dat_tagged.Rdata", verbose=FALSE)
+load(file = "../extdata/tribe2023_tagged.Rdata", verbose=FALSE) #updated 2023 data, adds 3 DRs.
+```
+
+```{r, echo = FALSE}
+tt <-
+  tribe2023_tag %>% #tribal_tag - replaced in all other instances
+  mutate(Year = year(Declaration_Date)) %>%
+  group_by(Disaster_Number) %>% 
+  summarise(.groups = "keep",
+            Year = Year[1],
+            Tribal_Declaration = Tribal_Declaration[1],
+            Region=Region[1],
+            Name = Applicant_Name[1],
+            Apps = n(),
+            Incident_Type = Title[1],
+            Declaration_Date = min(Declaration_Date),
+            App.or.Recip = ifelse(TRUE %in% grepl(x = Recipient_is_Tribal, pattern = "Tribal"), "Tribal", "Non-Tribal")
+  ) %>%
+  filter(Tribal_Declaration == "Tribal") %>% #NOT RECIPIENT ONLY TRIBES
+  arrange(Year, Disaster_Number) %>% 
+  group_by(Region, Year, App.or.Recip) %>% 
+  summarise(.groups = "keep",
+            Tot_DRs = length(unique(Disaster_Number)),
+            Total_Direct_Recip = n()) %>% 
+  pivot_wider(id_cols = c("App.or.Recip","Year"), names_from = Region, values_from = #Total_Direct_Recip
+ Tot_DRs
+ ) %>% 
+  arrange(App.or.Recip, Year)
+
+#rename
+names(tt)[3:8] <- paste0("R", names(tt)[3:8])
+
+ttt <- tt %>% replace(is.na(.),0) %>% ungroup() %>% select(-App.or.Recip) %>% mutate(Year=as.character(Year))
+
+totals <- data.frame(Year="Total", t(colSums(ttt[,2:7])))
+
+historic_drs <- rbind(ttt,totals)
+
+historic_drs2 <- bind_cols(historic_drs, data.frame("Total" = rowSums(historic_drs[,2:7])))
+```
+
+### 1. Independent Tribal Declarations by Region and Year
+
+```{marginfigure}
+*Independent* of States, meaning a Tribe is Applicant and Recipient. Data from Grants Manager (NDM) 2017-2023. 
+Excludes COVID declarations. 
+```
+
+```{r, echo = FALSE, fig.align='left'}
+kable(historic_drs2)
+```
+
+## Prediction:
+
+If tribal application and declaration activity over the last several years remains
+moderately similar over the next five years, and declarations are made in consideration of
+a \$100k threshold, we may expect:
+
+-   **~30** tribal declarations within the next 5 years.
+-   Regions responding to **0-1** additional disasters per year, beyond their historic
+    trends.
+
+```{marginfigure}
+Random samples of events are drawn from the data, each sample representing a potential *future disaster year*, then aggregated by Region. 
+
+If a Region shows 0, it means no events prompted a Tribal DR. If a Region shows **NA**, it didn't get drawn in the sample, meaning *no events impacted that region* in the given year. 
+```
+
+```{r sampling routine, echo=FALSE}
+#sampling routine
+years = 2025:2029  #year set
+years_projected = data.frame(Year = 0, "R4"=0,"R6"=0,"R7"=0,"R8"=0,"R9"=0,"R10"=0)
+
+no_tot <- historic_drs2[1:7,1:7]
+no_tot[no_tot==0]<- NA
+
+set.seed(6147)
+for(year in years){  #samples looped
+  no_tot %>% pivot_longer(cols=2:7, names_to = "Region", values_to = "DR_Count") %>% 
+    slice_sample(prop=.25, replace = T) %>% 
+    group_by(Region) %>% 
+    summarise(
+         DR_Count = sum(DR_Count, na.rm = T))%>% 
+    mutate(Year = year) %>% 
+    pivot_wider(id_cols = Year, names_from = Region, values_from = DR_Count, values_fill = 0) -> yt 
+  years_projected <- bind_rows(years_projected, yt)
+}
+
+years_projected <- years_projected[2:nrow(years_projected),] %>% mutate(Year = as.character(Year))
+```
+
+### 2. Projected 5 Years - Sample
+
+```{r, echo=FALSE }
+#replace any sampled 0 years as 1, assuming a minimum declaration
+years_proj_PLAN_FACTOR <- years_projected
+years_proj_PLAN_FACTOR[years_proj_PLAN_FACTOR==0] <-1
+years_proj_PLAN_FACTOR[,2:7]  <- round(years_proj_PLAN_FACTOR[,2:7]*1.35,0)
+
+#formatting with totals added... (y_p)
+#years_projected[,2:7] <- years_projected[,2:7] %>% replace(is.na(.),0)
+
+sums <- data.frame(Year="Total", t(colSums(years_projected[,2:7], na.rm=T)))
+
+years_proj_formatted <- bind_rows(years_projected, sums)
+years_proj_formatted <- cbind(years_proj_formatted,data.frame("Total"=rowSums(years_proj_formatted[,2:7],na.rm=T)))
+
+kable(years_proj_formatted)
+```
+
+If FEMA Response activity significantly exceeds our expectation based on current data,
+such as a 30-40% increase in declarations, we may expect:
+
+-   **~50** declarations over the next 5 years.
+-   Regions responding to **1-2 additional** disasters per year, beyond their historic
+    trend.
+
+```{marginfigure}
+Same samples of events as above (2), however, sample values of **0** were replaced by **1**, meaning when a Region *did* experience an impact, the lower threshold made it possible to delcare a disaster. 
+
+Remaining values are multiplied by 1.35, a 30-40% increase in disaster declarations.
+
+**NA** for a Region and Year indicates *no events of significant impact*.
+```
+
+### 3. Projected 5 Years - Sample + Planning Factor
+
+```{r, echo=FALSE, fig.cap="NAs mean 'no Events of significant impact'"}
+#formatting with totals added... (y_p-FACTOR)
+years_proj_PLAN_FACTOR_formatted <- bind_rows(
+  years_proj_PLAN_FACTOR, 
+  data.frame(Year="Total", t(colSums(years_proj_PLAN_FACTOR[,2:7], na.rm=T)))
+  )
+
+years_proj_PLAN_FACTOR_formatted <- cbind(years_proj_PLAN_FACTOR_formatted, data.frame("Total"=rowSums(years_proj_PLAN_FACTOR_formatted[,2:7],na.rm=T)))
+
+kable(years_proj_PLAN_FACTOR_formatted)
+```
+
+Both of the scenarios described should be considered along with Regional and Adminstrative
+planning staff expertise. Our data comprises 7 years of events, but the number of Tribal
+Events is still quite small. The following sections add context to this idea above,
+considering when Tribes may have been able to apply independently, and when data on event
+impact (PDA) implies possible events for declaration under our prescribed 'future'
+scenarios.
+
+## \_\_\_\_\_\_\_\_\_
+
+## Context
+
+Existing Tribal Pilot Guidance requires minimum damage threshold of \$250K for tribal
+declarations. [^2] This figure also represents an assumed minimum administrative cost for
+any declaration. Changing to the \$100k threshold is an equitable decision that allows
+FEMA to service Tribes proportionally to the response historically given to states. [^3]
+
+[^2]: Tribal Declarations Pilot Guidance, January 2017, pg 25
+
+[^3]: See Appendix - Previous Analysis Figure
+
+Most Tribes are quite small compared to county and state equivalents. The current policy
+creates a *filtering effect* on our data. Impacts to small tribes and geographies (e.g. a
+hypothetical \$60,000 of flooding damage) may affect 70-90% of a community, but not come
+close to either the \$100k or \$250k thresholds. [^4] Changing the declaration impact
+threshold doesn't change the **frequency of impacts** to tribes, however, the "unknown
+data" (tribes that may have been impacted, but not assessed, and never working with FEMA)
+is not something our analysis can directly account for. However, we can say that such
+impacts, if they represent an increase in events, would be quite small in terms of cost,
+and are likely occur slightly more often than the typical declared disasters we see for
+tribes. In a scientific best guess, this might be **1-2 small tribal declarations per
+Region, per year**, instead of the typical 0-1 declarations that Regions currently see.
+The following analysis attempts to justify this perspective with available FEMA Data.
+
+[^4]: <a href="https://bookdown.org/mike/data_analysis/survivorship-bias.html" target="_blank"> Survivorship Bias</a>
+
+
+## \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+## **Analytic Focus**
+
+-   Examine distribution of tribal nations across Regions/States and distribution of decs
+    (tribal or otherwise) across Regions/States
+-   Examine tribal turndowns between \$100k and \$250k historically
+-   Examine events that impacted tribes at a level below \$100k that they may not have
+    even requested historically.
+-   Examine events where a tribe came in as a part of a State dec. but may in the future
+    choose to pursue their own instead.
+
+```{r, include=FALSE, echo=FALSE}
+lapply(c("dplyr","tidyr","ggplot2","lubridate","tufte","kableExtra","scales"), FUN=library, character.only=TRUE, quietly=TRUE)
+```
+
+### Data
+
+-   **COVID Events** are excluded from counts, tables and analyses.
+-   PDA Data 2012-2022
+-   Applicant Level Data: 2017-2023 (Grants Manager)
+
+```{marginfigure}
+This is Grants Manager Data, from 2017 to end of 2023, originally used in the Tribal Threshold analysis. Data is at the applicant level, and is later aggregated to 'disaster level' to address the primary questions. This view is *filtered to **Tribal Declarations** only*
+```
+
+```{r load data, echo=FALSE}
+#load("tribal_dat_tagged.Rdata")
+
+#for viz
+.simpleCap <- function(x) {
+    s <- strsplit(x, " ")[[1]]
+    paste(toupper(substring(s, 1, 1)), substring(s, 2),
+          sep = "", collapse = " ")
+}
+
+tribe2023_tag %>% 
+  mutate(Title = substr(.simpleCap(tolower(Title)),start = 1,stop = 12),
+         Applicant_Name = .simpleCap((tolower(Applicant_Name)))
+         ) %>% 
+  select(-Disaster_Type, -RPA_Reference_Number, -Applicant_ID, - Grantee_Type) %>% 
+  filter(Tribal_Declaration=="Tribal") %>% 
+  #head(70) %>% 
+  kable %>% 
+    kable_styling("striped", full_width = F, font_size = 14) %>%
+    scroll_box(width = "800px", height = "350px")
+```
+
+# \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+# Distribution of Tribal Declarations
+
+The following table shows the number of *direct* Tribal Declarations, per Region, per
+Year. Establishing baseline expectations of for typical Region response to tribes.
+
+```{r echo = FALSE}
+#tt 
+#rename
+# names(tt)[3:8] <- paste0("R", names(tt)[3:8])
+# 
+# ttt <- tt %>% replace(is.na(.),0) %>% ungroup() %>% select(-App.or.Recip) %>% mutate(Year=as.character(Year))
+# 
+# totals <- data.frame(Year="Total", t(colSums(ttt[,2:7])))
+# 
+# historic_drs <- rbind(ttt,totals)
+# 
+# historic_drs2 <- bind_cols(historic_drs, data.frame("Total" = rowSums(historic_drs[,2:7])))
+```
+
+### Independent Tribal Declarations by Region and Year
+
+```{marginfigure}
+Tribe as Applicant and Recipient, exclusive of State-DRs. 
+Excludes COVID declarations. 
+```
+
+```{r echo = FALSE, fig.align='left'}
+kable(historic_drs2)
+```
+
+-   Not all regions have Tribal Declarations in a year.
+-   Select Regions may respond to 1-2 Tribal Declarations in a year.
+-   In a *4 year period*, the per year probability of a region seeing a declaration would
+    be around 25%.
+-   If halving the threshold (250k -\> 100k) doubles this probability to 50%, it's a
+    coinflip chance that (select) Regions will respond to a one Tribal Declaration in a
+    year.
+-   The most frequent value is '0', for example Region 4 had **no independent Tribal
+    independent Decs for 4 years, 2018-2021**, but there were State-Decs for hurricanes in
+    this region that included tribes.
+
+## Gauging the Future
+
+Taking this Region by Year breakdown, we create a sample set of potential disaster years
+(labelled 2025:2029), using the following method and assumptions. - Sample 25% of all
+Tribal Declarations - Aggregate to Region - If a Region doesn't appear in the sample it
+*wasn't impacted by a disaster*.
+
+```{r echo=TRUE}
+# #sampling routine
+years = 2025:2029  #year set
+years_projected = data.frame(Year = 0, "R4"=0,"R6"=0,"R7"=0,"R8"=0,"R9"=0,"R10"=0)
+
+no_tot <- historic_drs2[1:7,1:7]   #Decs by Region/Year - stripped of 'totals'
+no_tot[no_tot==0]<- NA
+
+set.seed(6147) #set to reproduce same tables...
+for(year in years){
+  yt <- no_tot %>%
+    pivot_longer(cols=2:7, names_to = "Region", values_to = "DR_Count") %>%
+    slice_sample(prop=.25, replace = T) %>% #sample 25% of the distribution...
+    group_by(Region) %>%
+    summarise(DR_Count = sum(DR_Count, na.rm = T)) %>%
+    mutate(Year = year) %>%
+    pivot_wider(id_cols = Year, names_from = Region, values_from = DR_Count, values_fill = 0)
+
+  years_projected <- bind_rows(years_projected, yt) #concatenate table
+}
+
+years_projected <- years_projected[2:nrow(years_projected),] %>% mutate(Year = as.character(Year))
+```
+
+This gives us the following *probabilistic sample* table:
+
+```{marginfigure}
+NAs for a Region and Year indicates *no Events of significant impact*.
+```
+
+### Projected 5 Years - Sample
+
+```{r echo=FALSE }
+#replace any sampled 0 years as 1, assuming a minimum declaration
+# years_proj_PLAN_FACTOR <- years_projected
+# years_proj_PLAN_FACTOR[years_proj_PLAN_FACTOR==0] <-1
+# years_proj_PLAN_FACTOR[,2:7]  <- round(years_proj_PLAN_FACTOR[,2:7]*1.35,0)
+# 
+# #formatting with totals added... (y_p)
+# #years_projected[,2:7] <- years_projected[,2:7] %>% replace(is.na(.),0)
+# 
+# sums <- data.frame(Year = "Total", t(colSums(years_projected[,2:7], na.rm=T)))
+# 
+# years_proj_formatted <- bind_rows(years_projected, sums)
+# years_proj_formatted <- cbind(years_proj_formatted,data.frame("Total"=rowSums(years_proj_formatted[,2:7],na.rm=T)))
+
+kable(years_proj_formatted)
+```
+
+The sampling method which generates the 'projected future' years uses *random sampling*
+which is a good way to think about potential disaster impacts. We can't say for sure a Cat
+3 Hurricane will impact Florida in 2024, but we are very sure that in a 4-5 year span, one
+of those years would contain a hurricane. Each year itself could be considered a different
+scenario to plan for. One year may contain no significant weather events, or no tribal
+declarations even with weather events occurring.
+
+The sampling method can yield different results. In this specific case, the total
+predicted is 43 events across 5 years. The particular high year is 2029, where R8
+experiences 4 and R9 sees 8 declarations.
+
+Note: When **NA** occurs in a year, the sampling routine didn't select a given Region (for
+Tribal related impacts) meaning "no weather impacts occurred". Therefore the difference
+between 0 and NA in a sampleyear is: - 0 indicates "no declarations" would be made in the
+projected year. - NA indicates "no weather impacts/events" would occur in the projected
+year, (therefore no declarations).
+
+###\_\_\_\_\_\_
+
+We then create a **Planning factor scenario** based off this sample table, making
+assumptions that lowering the threshold will increase declarations. The method is: -
+Replace any 0 values with 1 (meaning when a Region *did* experience an impact, the lower
+threshold made it possible to delcare a disaster) - Multiply remaining values by 1.35 (a
+30-40% increase in disaster declarations)
+
+```{marginfigure}
+NAs for a Region and Year indicates *no Events of significant impact*.
+```
+
+### Projected 5 Years - Sample + Planning Factor
+
+```{r echo=FALSE, fig.cap="NAs mean 'no Events of significant impact'"}
+#formatting with totals added... (y_p-FACTOR)
+# years_proj_PLAN_FACTOR_formatted <- bind_rows(
+#   years_proj_PLAN_FACTOR, 
+#   data.frame(Year="Total", t(colSums(years_proj_PLAN_FACTOR[,2:7], na.rm=T)))
+#   )
+# 
+# years_proj_PLAN_FACTOR_formatted <- cbind(years_proj_PLAN_FACTOR_formatted, data.frame("Total"=rowSums(years_proj_PLAN_FACTOR_formatted[,2:7],na.rm=T)))
+
+kable(years_proj_PLAN_FACTOR_formatted)
+```
+
+Sampling with replacement was chosen as the number of total Tribal Events is quite small.
+Because of higher share of samples, Regions like 6 or 9 come out with high numbers of
+declarations, however, their rate of *new declarations* (changes from 0 to 1) are much
+lower. This can be interpreted as Regions with a history of response and coordination with
+Tribes may see small to moderate increases, but not *novel* work. Region 4, which
+historically had many years with no declarations, might actually experience a **larger
+change** (qualitative, and quantitative change) in necessitated response if the lowered
+threshold changes the way their applicants work with FEMA.
+
+This sampling method can't account for large changes in impacts. Regional and HQ expertise
+is more relevant here, but I noted R4 above because of the prevalance of Hurricanes and
+the number of Tribes within the hurricane belt (e.g. Moccosukee, Choctaw, Muscogee,m
+Seminole in Florida, Mississippi). While anecdotal, if a number of these tribes switch to
+independent declaration as opposed to state declaration, the number of DRs could go up
+quite a bit (Thus the assumption of changing 0-1 in the *Planning Factor* scenario).
+
+The following sections provide expanded analysis that could be applied to the envisioned
+scenarios.
+
+## \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+## Which Tribes may have applied independently?
+
+-   The table below shows the Tribes with *Disaster Total Amounts* above \$100k (and below
+    \$1M).
+-   **Declaration Type** indicates whether the instance was a State-DR or Tribal
+    (independent) DR.
+-   Assessing *specific impacts to Tribes* in a State-DR, there were only 4 instances in
+    the last 7 years where a tribe may have applied independently under the 100k, but not
+    the 250k threshold.
+
+```{r echo=FALSE}
+
+#for viz
+.simpleCap <- function(x) {
+    s <- strsplit(x, " ")[[1]]
+    paste(toupper(substring(s, 1, 1)), substring(s, 2),
+          sep = "", collapse = " ")
+}
+
+tribe.recip <- tribe2023_tag %>%
+  filter(Recipient_is_Tribal=="Tribal") %>% 
+  group_by(Disaster_Number, "FIPS"=County_FiveDigit_FIPS) %>% 
+  summarise(.groups = "keep",
+            Declaration_Type = Tribal_Declaration[1],
+            Region=Region[1],
+            State=State_Code[1],
+            County=County[1],
+            Name = Applicant_Name[1],
+            Incident_Type = Title[1],
+            Declaration_Date = min(Declaration_Date),
+            App.or.Recip = ifelse(TRUE %in% grepl(
+              x = Recipient_is_Tribal, 
+              pattern = "Tribal"), "Tribal", "Non-Tribal"),
+            Applicants = n(),
+            Projects = sum(Number_Of_PWs, na.rm=T),
+            Total_Amount = sum(Project_Amount, na.rm=T),
+            Fed_Share_Total = sum(Federal_Share_Obligated, na.rm=T)) %>% 
+  mutate(Year = year(Declaration_Date),
+         Name = .simpleCap(tolower(Name))) %>% 
+  arrange(desc(Total_Amount)) %>% ungroup()
+
+
+## Applied on their own::
+tribe.recip.bounded <- tribe.recip %>% filter(Total_Amount <300000 & Total_Amount >95000)
+```
+
+```{marginfigure}
+**Total_Amount** is the total Public Assistance spending listed in Grants Manager.
+```
+
+### State and Tribal Declarations near the Threshold
+
+```{r echo=FALSE}
+tribe.recip.bounded %>% 
+  mutate(Total_Amount = dollar(Total_Amount)) %>% 
+  select(Year, "DR" = Disaster_Number, Declaration_Type, Total_Amount, App.or.Recip, Name) %>% 
+  kable()
+```
+
+## Similar Distributions
+
+One way of thinking about *how many* Declarations we may additionally see, is by looking
+at the distribution of declaration data. We would expect the distribution to look
+approximately symmetrical, or normal (after a log transformation). Where we see gaps is an
+indication of potential impacts that could have occured (or may occur) but are not
+currently declared because of the threshold policy.
+
+Here is the distribution plot of current DRs in Grants Manager, data from **seven years of
+Declarations**.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+DRs_agg <- tribe2023_tag %>% 
+  mutate(Year = year(Declaration_Date)) %>%
+  group_by(Disaster_Number) %>% 
+  summarise(.groups = "keep",
+            Year = Year[1],
+            Tribal_Declaration = Tribal_Declaration[1],
+            Region=Region[1],
+            Name = Applicant_Name[1],
+            Incident_Type = Title[1],
+            Declaration_Date = min(Declaration_Date),
+            App.or.Recip = ifelse(TRUE %in% grepl(x = Recipient_is_Tribal, pattern = "Tribal"), "Tribal", "Non-Tribal"),
+            Project_Amount = sum(Project_Amount)
+            )
+
+DRs_agg %>% 
+  ggplot(aes(x=Project_Amount))+
+  geom_histogram(aes(color=Tribal_Declaration))+
+  scale_x_log10(labels=dollar)+
+  theme_tufte(base_size = 16)+
+  labs(y="Declaration Count") ->
+Drs_dist
+
+Drs_dist
+```
+
+And here is a second plot with **added** bars to fill in the missing gap that *should* be
+there for Tribal specific events.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+Drs_dist +
+  geom_rect(aes(xmin=22500, xmax=35000,ymin=0,ymax=1.5),fill="lightgrey", color="red1")+
+  geom_rect(aes(xmin=35000, xmax=55000,ymin=0,ymax=1.5),fill="lightgrey", color="red2")+
+  geom_rect(aes(xmin=55000, xmax=85000,ymin=0,ymax=1.5),fill="lightgrey", color="red3")+
+  geom_rect(aes(xmin=85000, xmax=130000,ymin=0,ymax=1.5),fill="lightgrey", color="red4")+
+  geom_label(aes(x = 50000, y=4, label="Added Tribal DRs"), color="red") ->
+  Drs_added_plot
+
+Drs_added_plot
+```
+
+The additions to this plot represent a sample of 4 to 12 small scale impacts, ranging from
+\$22,500 to \$130,000, that could occur over a 1-7 year time period. Additional years
+would also likely add Declarations in the rest of the Tribal distribution (the current
+range of \$200,000-\$1M+) Some caveats: - Assumes the \$250k threshold is what 'prevents'
+smaller impacts from being registered as Declarations, as opposed to state (or tribal)
+resources dealing with this impacts without FEMA. - Assumes 'similar underlying' character
+of geographic entities, between Tribes and States, with tribes being a 'scaled down'
+equivalent to States. [^5]
+
+[^5]: See Appendix - Fig. 1
+
+To try and validate this idea that there **are impacts below the 250k threshold** that
+*could have been* declared but were not, we now turn to Preliminary Damage Assessment
+data.
+
+# \_\_\_\_\_\_\_\_\_
+
+# PDA Data
+
+The Preliminary Damage Assessment data provides a look at how often tribes approached the
+**250K Threshold** and how often they might cross the new **100k Threshold**. - *Data
+Range 2012-2022*
+
+```{r echo = FALSE, include = FALSE}
+#load PDA Data
+load(file="../extdata/FIDA-wFIPS.Rdata", verbose=F)
+
+pda <- fida34787 %>% #convert char to num. 
+  mutate(Federal_Share_Estimate = as.numeric(gsub("$","",Federal_Share_Estimate)),
+         Total_Cost_Estimate = as.numeric(gsub("$","",Total_Cost_Estimate))
+         )
+#pda %>% 
+ #kable #%>% 
+    #kable_styling("striped", full_width = F) #%>%
+    #scroll_box(width = "500px", height = "225px")
+```
+
+## Tribal PDA Amounts
+
+```{marginfigure}
+PDA Data 2012-2022, *Total Cost Estimate* is the sum of all assessed Categories of Work (A-G). 
+
+The majority of Tribal PDAs have a value of $0 - indicating missing/incomplete or not performed PDAs. These are likely Tribes declared along with a state, or represent PDAs from a COVID period (2020 declarations).
+```
+
+```{r echo=FALSE, fig.fullwidth=TRUE}
+
+#text search for tribes (there is no specific non-name indicator)
+pda.agg <-
+  pda %>%
+    mutate(Is_Tribe = ifelse(
+    grepl(
+      "Tribe|Nation|Band|Native|Indian|Reserv|TDSA|OTSA|Pueblo|Choctaw|Navajo",
+      County_Name, ignore.case = T)==TRUE 
+    & 
+    grepl(x = County_Name, pattern = "(County)")==FALSE,  
+    yes = "Tribe", no = "County"),
+    Year = lubridate::year(Declaration_Request_Date)
+    ) %>% 
+  #filter(Is_Tribe==TRUE) %>% 
+      group_by(Year, "DR" = Disaster_Number, State, County_Name) %>% 
+        summarize(.groups = "keep",
+                  Total_Cost_Estimate = sum(Total_Cost_Estimate, na.rm=T),
+                  Declaration_Status = Declaration_Status[1],
+                  Is_Tribe=Is_Tribe[1])
+
+# Display the table
+pda.agg %>% 
+  filter(Is_Tribe == "Tribe") %>% 
+  arrange(desc(Total_Cost_Estimate)) %>% 
+  mutate(Total_Cost_Estimate = scales::dollar(Total_Cost_Estimate)) %>% 
+  kable %>% 
+    kable_styling("striped", full_width = F) %>%
+    scroll_box(width = "800px", height = "500px")
+```
+
+## Turndown Status
+
+```{marginfigure}
+There is a single example of a Tribes that completed a PDA receiving **Turndown** Declaration status.
+```
+
+```{r echo=FALSE}
+
+#text search for tribes (there is no specific non-name indicator)
+pda.agg %>% 
+  filter(Is_Tribe=="Tribe",
+         Declaration_Status=="Turndown") %>% 
+  #filter(Total_Cost_Estimate > 75000,
+  #       Total_Cost_Estimate < 250000) %>% 
+    #filter(Disaster_Number %in%  c(4681,4458,4298,4467,4587)) %>% 
+  arrange(desc(Total_Cost_Estimate)) %>%
+  mutate(Total_Cost_Estimate = scales::dollar(Total_Cost_Estimate)) %>%
+  kable #%>% 
+    #kable_styling("striped", full_width = F) %>%
+    #scroll_box(width = "700px", height = "500px")
+```
+
+## Tribes Near Threshold
+
+```{marginfigure}
+Data was filtered to a range between $50,000 -> $250,000.
+```
+
+```{r echo=FALSE}
+
+#text search for tribes (there is no specific non-name indicator)
+pda.agg %>% 
+  filter(Is_Tribe=="Tribe",
+         Total_Cost_Estimate > 50000,
+         Total_Cost_Estimate < 250000) %>% 
+    #filter(Disaster_Number %in%  c(4681,4458,4298,4467,4587)) %>% 
+  arrange(desc(Total_Cost_Estimate)) %>% 
+  mutate(Total_Cost_Estimate = scales::dollar(Total_Cost_Estimate)) %>%
+  kable #%>% 
+    #kable_styling("striped", full_width = F) %>%
+    #scroll_box(width = "700px", height = "500px")
+```
+
+-   There are 4 instances of Tribal PDAs that are **above (or near) \$100k** that were
+    declared.
+-   These represent specific Tribes that could have applied directly, instead of under a
+    State.
+
+## \_\_\_\_\_\_\_\_
+
+## Appendix
+
+## Current Tribal PDAs
+
+-   Shows active Tribal PDAs in the FACT Portal.
+-   Three instances: 1 Tribal Specific Declaration, 2 Sub-State Declarations
+-   One state level cost estimate is above the \$100k Threshold (NY), tribe name unlisted.
+
+```{r echo=FALSE}
+#FACT_PDA <- read.csv(file = "tables/Current_FACT_PDAs.csv", header=T)
+load(file="../extdata/FACT_PDA.Rdata")
+
+clean_FACT_PDA <- FACT_PDA %>% 
+  mutate(Work_Cat = toupper(stringr::str_extract(pa_type, ".(?!.*.)")),
+         Estimated_Cost = dollar(total_cost),
+         Repair_Cost = dollar(repair_cost)) %>% 
+  select(pda_datetime, "ST" = state_territory, "Cnty" = county_label, Work_Cat, Estimated_Cost)
+
+clean_FACT_PDA %>% 
+  kable %>% 
+    kable_styling("striped")
+```
+
+## \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+## Previous Threshold Analysis, Key Figures
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+load(file="../extdata/dr_agg_from_counties.Rdata")
+
+dr.agg %>% 
+  ggplot(aes(x=Tribal_Declaration, y=Total_Amount, color=Tribal_Declaration))+
+  geom_jitter(aes(text = paste(
+    Tribe, "<br>",
+    "Total:", dollar(round(Total_Amount,0))
+    )))+
+  geom_boxplot(alpha=.75, outlier.shape = NA)+
+  #geom_hline(aes(yintercept=1000000),lwd=2, color="chartreuse")+
+  #geom_segment(aes(x=1.975, xend=2.025, y=1.12e06, yend=1.12e06), 
+             #lwd=1, color="darkblue", lineend="round")+
+  #geom_segment(aes(x=.97, xend=1.3, y=1e06, yend=1e06), 
+             #lwd=1, color="darkblue", lineend="round")+
+  geom_curve(aes(x=1, xend=2, y=1e06, yend=97709), 
+             lwd=1, color="blue", lineend="round", curvature=0)+
+  #geom_curve(aes(x=1, xend=2, y=2.075e07, yend=1.12e06), 
+  #             lwd=1, color="blue", lineend="round", curvature=0)+
+  geom_segment(aes(x=1.85, xend=2.15, y=97709, yend=97709), 
+               lwd=1, color="darkblue", lineend="round")+
+  #geom_label(aes(x=2, y=97709, label="New Threshold"), nudge_x=.3, nudge_y = 0, color="darkblue")+
+  geom_label(aes(x=1, y=2.075e07, label="$24M"), nudge_y = .2,  color="red")+
+  geom_label(aes(x=2, y=1.12e06, label="$1.08M"), nudge_y = .2, color="turquoise")+
+  
+  geom_label(aes(x=1, y=1e06, label="$1M"), nudge_y = -.2,  color="red")+
+  geom_label(aes(x=2, y=97709, label="$100k"), nudge_y = -.3, color="turquoise")+
+  
+  #geom_hline(yintercept = 97700, lwd=2, color="turquoise")+
+  scale_y_log10(labels=dollar)+
+  #facet_wrap(~Tribal_Declaration)+
+  #scale_color_manual(values = c(rad.blue[1], rad.red[1]))+
+  #scale_fill_manual(values = c(rad.blue[1], rad.red[1]))+
+  #labs(title="Plan B - State Level Declaration Threshold")+
+  #theme_fema()+
+  theme_tufte(base_size = 16)+
+  labs(title="Proportionally Scaled Thresholds",
+       y="Total Disaster Cost (log$)",
+       x="")+
+  theme(legend.position = "none") -> PLAN.B.plot
+
+library(plotly)
+ggplotly(PLAN.B.plot, tooltip=c("text"))#Tribe", "Total_Amount"))
+
+```
+
+-   State DRs and Tribal DRs are propotional rescalings of one another.
+-   Tribal incidents being around a tenth of the size of State incidents.
+
+## \_\_\_\_\_\_\_\_\_
+
+## PDA Data and Overall Costs
+
+-   Relationship Between PDA and Final Cost is consistent for Tribes and Counties.
+-   Tribal DRs and Non-Tribal DRs
+-   Similar linear relationship.
+
+```{r echo=FALSE, message=FALSE}
+
+pda %>% 
+  mutate(Is_Tribe = ifelse(
+    grepl(
+      "Tribe|Nation|Band|Native|Indian|Reserv|TDSA|OTSA|Pueblo|Choctaw|Navajo",
+      County_Name, ignore.case = T)==TRUE, 
+    yes = "Tribe", no = "County")
+    ) %>% 
+  filter(Total_Cost_Estimate < 3e08 & Total_Cost_Estimate >1000,
+         Project_Amount < 2e08 & Project_Amount > 1000) %>%  
+  ggplot(aes(x=Total_Cost_Estimate, y=Project_Amount))+
+  geom_point()+
+  geom_smooth(method="lm")+
+  scale_x_log10(labels = scales::dollar)+
+  scale_y_log10(labels = scales::dollar)+
+  theme_tufte(base_size = 16)+
+  facet_wrap(~Is_Tribe)
+
+```
