@@ -51,5 +51,7 @@ The chart ended up being called the "Bug Splat" chart, and I can see it now, col
 
 You may point out that my true sin was violating Tufte (and other's) rules on 3+ perceptual elements, position, shape, color, size - oh my!  Which is also quite true. 
 
+![](/images/RFI_Dist_Example.png)
+
 ## Conclusions...
 ... are for those with significant data or publishing quotas, which I've given up on, so I'll just leave you with the visuals. Code attached for those interested. Be careful out there. 
