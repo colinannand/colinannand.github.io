@@ -25,9 +25,7 @@ title:                 Placebos Only
 # A short description (~150 chars) of the page used for the meta description tag.
 # Can use markdown, but no more than one paragraph (enforced by `>`)
 description:           >
-  Comprehensive generalist for data analysis, coding, writing, and research.
-    My quotidian experience involves wrangling data, running analysis, then visualizing and interpreting that in regards to strategic goals. 
-    When that's done, I play a little tennis, and read science fiction.
+  Comprehensive generalist for data analysis, coding, writing, and research. My quotidian experience involves wrangling data, running analysis, then visualizing and interpreting that in regards to strategic goals. When that's done, I play a little tennis, and read science fiction.
 
 # A shorter description for the sidebar.
 tagline:               Comprehensive consultant for data analysis, coding, writing, and research.
