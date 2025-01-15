@@ -1,0 +1,71 @@
+---
+title: "Compare Viz to Visitech.ai"
+date: "2025-01-15"
+always_allow_html: true
+output:
+  md_document:
+    variant: gfm
+    preserve_yaml: TRUE
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../projects/_posts") })
+description: "Prompted from an interesting conversation."
+layout: post
+categories:
+  - R Markdown
+  - Jekyll    
+    
+---
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
+lapply(c("data.table", "dplyr","ggplot2","scales", "rmdformats", "kableExtra"), FUN=library, character.only=TRUE, quietly=TRUE)
+
+base_dir <- "/Users/cannand/GitHub/colinannand.github.io" 
+base_url <- "/"
+fig_path <- "images/" 
+
+knitr::opts_knit$set(base.dir = base_dir, base.url = base_url)
+knitr::opts_chunk$set(fig.path = fig_path,
+                      cache.path = '../cache/',
+                      message=FALSE, warning=FALSE,
+                      cache = TRUE) 
+
+```
+
+## Quickly Visualizing Large Scale Open Data
+- I want to make a quick comparison between a sizable data sets, and visualization that is simple an intuitive. 
+- I'll be using R for this, and comparing to visitech.ai[https://www.visitech.ai/]
+
+
+### Reading in Data on weather.
+
+```{r read in data}
+usa2020 <- fread("https://files.asmith.ucdavis.edu/weather/daily/county_noweight/202001.csv")
+dim(usa2020)
+```
+
+First Initial Plot
+```{r}
+
+usa2020 %>% 
+  filter(st_abb=="CO") %>% 
+  mutate(Date = as.Date(date, format="YMD")) %>% 
+  ggplot(aes(y=tmax, x=Date))+
+    geom_point()+
+    geom_line()
+  
+```
+Converting to Farenheit manually
+```{r}
+usa2020 %>% 
+  filter(st_abb=="CO") %>% 
+  mutate(Date = as.Date(date, format="YMD"),
+         Farenheit = (tmax*(9/5) + 32)) %>% 
+  ggplot(aes(y=Farenheit, x=Date))+
+    geom_point()+
+    geom_line()
+
+```
+
+### And a quick comparison to the image created by Visitech.ai
+
+![](/images/Annual-Average.png)
