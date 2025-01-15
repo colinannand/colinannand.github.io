@@ -1,6 +1,7 @@
 ---
 title: "Compare Viz to Visitech.ai"
 date: "2025-01-15"
+runs-on: ubuntu-22.04
 always_allow_html: true
 output:
   md_document:
