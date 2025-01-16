@@ -2,9 +2,9 @@
 layout: post
 title: PhD Dissertation - Cognition, Dynamics, the Devil's Staircase
 image: 
-  path: /images/diss/Farey Trees Choice Response Time.webp
+  path: /images/diss/Farey_Trees_Choice_Response_Time.webp
 description: >
-  A million button presses produces results. Chaotic dynamics in cognitive processes lead to beguiling patterns.
+  A million button presses produces results and chaotic dynamics in cognitive processes lead to beguiling patterns.
 sitemap: false
 ---
 
@@ -31,5 +31,5 @@ I'm coming back to writing this description. But simply put, when you have non-l
 
 To wit, "you can get linear dynamics from a complex system, but you can't get non-linear dynamics for a linear system" - [Mike Richardson](https://scholar.google.com/citations?user=DJPcjuQAAAAJ&hl=en)
 
-
+### References
 [^1]: Annand, Colin T; Fleming, Sheila M; Holden, John G; Farey trees explain sequential effects in choice response time. *Frontiers in Physiology* 12, P61145, 2021. 
