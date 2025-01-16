@@ -16,6 +16,9 @@ title: Resume
 sitemap: true
 ---
 
+Download: 
+<https://colinannand.github.io/assets/doc/Annand_Resume_OnePage.pdf>
+
 <table>
 <tbody>
 <tr><th><p>COLIN</p><p>ANNAND</p></th><th><p> | www.linkedin.com/in/colin-annand</p><p>|<a href="mailto:cta_resume@dispatch.mozmail.com"> cta_resume@dispatch.mozmail.com</a></p></th></tr><tr><td colspan="2">

@@ -29,7 +29,7 @@ whatsapp:
   icon: icon-whatsapp
 upwork:
   name: UpWork
-  icon: icon-box-add
+  icon: icon-mail
   prepend: 'https://www.upwork.com/freelancers/'
   append: '?mp_source=share'
 spotify:
