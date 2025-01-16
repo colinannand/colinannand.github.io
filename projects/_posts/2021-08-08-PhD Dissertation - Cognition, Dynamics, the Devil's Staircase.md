@@ -7,7 +7,9 @@ image: /images/diss/Farey_Trees_Choice_Response_Time.jpeg
 sitemap: false
 ---
 
+<!-- 
 [My lab's published paper for this work is here,](https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2021.611145/full) and the [formal document is here](https://www.proquest.com/openview/f7fe9173141e6e83b8b421ad5edcd157/1?pq-origsite=gscholar&cbl=18750&diss=y). 
+-->
 
 ## Chaotic Dynamics
 
@@ -26,5 +28,7 @@ I'm coming back to writing this description. But simply put, when you have non-l
 
 To wit, "you can get linear dynamics from a complex system, but you can't get non-linear dynamics for a linear system" - [Mike Richardson](https://scholar.google.com/citations?user=DJPcjuQAAAAJ&hl=en)
 
+<!-- 
 ### References
 [^1]. Annand, Colin T; Fleming, Sheila M; Holden, John G; Farey trees explain sequential effects in choice response time. *Frontiers in Physiology* 12, P61145, 2021. 
+-->
