@@ -4,12 +4,9 @@ title: PhD Dissertation - Cognition, Dynamics, the Devil's Staircase
 image: 
   path: /images/diss/Farey Trees Choice Response Time.webp
 description: >
-  A million button presses produces results.
+  A million button presses produces results. Chaotic dynamics in cognitive processes lead to beguiling patterns.
 sitemap: false
 ---
-
-Chaotic dynamics in cognitive processes lead to beguiling patterns.
-{:.lead}
 
 [Published paper for this work is here,](https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2021.611145/full) [the formal document is here](https://www.proquest.com/openview/f7fe9173141e6e83b8b421ad5edcd157/1?pq-origsite=gscholar&cbl=18750&diss=y).
 
@@ -18,7 +15,11 @@ Chaotic dynamics in cognitive processes lead to beguiling patterns.
 
 ## Chaotic Dynamics
 
-Ever since the introduction of Dark Mode, link styles have been a bit of an issue. Specifically, finding an accent color that worked on both light and dark backgrounds was the problem. With Hydejack 9, the [link style](#linking-in-style) has been revamped so that legibility is no longer tied to the choice of accent_color, giving you much more freedom in creating a unique design flavor for your site.
+Chaotic dynamics give rise to interesting and [beguiling patterns](https://en.wikipedia.org/wiki/Fractal). When we analyze the seeming chaos in a certain way, we find harmonious and and clear indications of structure. The image linked above is a stylized model of a [bifurcation diagram](https://en.wikipedia.org/wiki/Bifurcation_diagram) discretized/simplified between two stable states. In the experiments these two states correspond to the two fingers/two choices in a set of  YES/NO cognitive discrimination task. 
+
+Among the fantastical sounding chaotic patterns contained therein, and elucidated in the dissertation are;
+- [The Devil's Staircase](https://en.wikipedia.org/wiki/Singular_function)
+- The Golden Path Ratio (*Aligns to a particularly stable anti-phase mode of oscillation, can't find a wiki for this one*)
  
 ## Abstract (Frontiers)
 
