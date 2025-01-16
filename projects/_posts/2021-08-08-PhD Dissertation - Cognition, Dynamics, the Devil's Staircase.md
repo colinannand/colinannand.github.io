@@ -2,21 +2,19 @@
 layout: post
 title: PhD Dissertation - Cognition, Dynamics, the Devil's Staircase
 image: 
-  path: /images/diss/Farey_Trees_Choice_Response_Time.webp
+  path: /images/diss/Farey_Trees_Choice_Response_Time.jpeg
 description: >
   A million button presses produces results and chaotic dynamics in cognitive processes lead to beguiling patterns.
 sitemap: false
 ---
 
-Links: My lab's [published paper for this work is here,](https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2021.611145/full) and the [formal document is here](https://www.proquest.com/openview/f7fe9173141e6e83b8b421ad5edcd157/1?pq-origsite=gscholar&cbl=18750&diss=y) . 
+Links: My lab's [published paper for this work is here,](https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2021.611145/full) and the [formal document is here](https://www.proquest.com/openview/f7fe9173141e6e83b8b421ad5edcd157/1?pq-origsite=gscholar&cbl=18750&diss=y). 
 
 ## Chaotic Dynamics
 
 Chaotic dynamics give rise to interesting and [beguiling patterns](https://en.wikipedia.org/wiki/Fractal). When we analyze the seeming chaos in a certain way, we find harmonious and and clear indications of structure. The image linked above is a stylized model of a [bifurcation diagram](https://en.wikipedia.org/wiki/Bifurcation_diagram) discretized/simplified between two stable states. In the experiments these two states correspond to the two fingers/two choices in a set of  YES/NO cognitive discrimination task. 
 
-Among the fantastical sounding chaotic patterns contained therein, and elucidated in the dissertation are;
-- [The Devil's Staircase](https://en.wikipedia.org/wiki/Singular_function)
-- The Golden Path Ratio (*Aligns to a particularly stable anti-phase mode of oscillation, can't find a wiki for this one*)
+Among the fantastical sounding chaotic patterns contained therein, and elucidated in the dissertation are, [the Devil's Staircase](https://en.wikipedia.org/wiki/Singular_function) and the Golden Path Ratio.
  
 ## Abstract (Frontiers)
 
