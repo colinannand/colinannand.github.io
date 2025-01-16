@@ -27,6 +27,11 @@ instagram:
 whatsapp:
   name: WhatsApp
   icon: icon-whatsapp
+upwork:
+  name: UpWork
+  icon: icon-box-add
+  prepend: 'https://www.upwork.com/freelancers/'
+  append: '?mp_source=share'
 spotify:
   name: Spotify
   icon: icon-spotify
