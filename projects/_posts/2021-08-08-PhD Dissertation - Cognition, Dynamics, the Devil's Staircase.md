@@ -1,14 +1,13 @@
 ---
 layout: post
 title: PhD Dissertation - Cognition, Dynamics, the Devil's Staircase
-image: 
-  path: /images/diss/Farey_Trees_Choice_Response_Time.jpeg
 description: >
   A million button presses produces results and chaotic dynamics in cognitive processes lead to beguiling patterns.
+image: /images/diss/Farey_Trees_Choice_Response_Time.jpeg
 sitemap: false
 ---
 
-Links: My lab's [published paper for this work is here,](https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2021.611145/full) and the [formal document is here](https://www.proquest.com/openview/f7fe9173141e6e83b8b421ad5edcd157/1?pq-origsite=gscholar&cbl=18750&diss=y). 
+[My lab's published paper for this work is here,](https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2021.611145/full) and the [formal document is here](https://www.proquest.com/openview/f7fe9173141e6e83b8b421ad5edcd157/1?pq-origsite=gscholar&cbl=18750&diss=y). 
 
 ## Chaotic Dynamics
 
@@ -18,8 +17,8 @@ Among the fantastical sounding chaotic patterns contained therein, and elucidate
  
 ## Abstract (Frontiers)
 
-The latencies of successive two-alternative, forced-choice response times display intricately patterned sequential effects, or dependencies. They vary as a function of particular trial-histories, and in terms of the order and identity of previously presented stimuli and registered responses. This article tests a novel hypothesis that sequential effects are governed by dynamic principles, such as those entailed by a discrete sine-circle map adaptation of the Haken Kelso Bunz (HKB) bimanual coordination model. The model explained the sequential effects expressed in two classic sequential dependency data sets. It explained the rise of a repetition advantage, the acceleration of repeated affirmative responses, in tasks with faster paces. 
-Likewise, the model successfully predicted an alternation advantage, the acceleration of interleaved affirmative and negative responses, when a task’s pace slows and becomes more variable. Detailed analyses of five studies established oscillatory influences on sequential effects in the context of balanced and biased trial presentation rates, variable pacing, progressive and differential cognitive loads, and dyadic performance. Overall, the empirical patterns revealed lawful oscillatory constraints governing sequential effects in the time-course and accuracy of performance across a broad continuum of recognition and decision activities.[^1] 
+  The latencies of successive two-alternative, forced-choice response times display intricately patterned sequential effects, or dependencies. They vary as a function of particular trial-histories, and in terms of the order and identity of previously presented stimuli and registered responses. This article tests a novel hypothesis that sequential effects are governed by dynamic principles, such as those entailed by a discrete sine-circle map adaptation of the Haken Kelso Bunz (HKB) bimanual coordination model. The model explained the sequential effects expressed in two classic sequential dependency data sets. It explained the rise of a repetition advantage, the acceleration of repeated affirmative responses, in tasks with faster paces. 
+  Likewise, the model successfully predicted an alternation advantage, the acceleration of interleaved affirmative and negative responses, when a task’s pace slows and becomes more variable. Detailed analyses of five studies established oscillatory influences on sequential effects in the context of balanced and biased trial presentation rates, variable pacing, progressive and differential cognitive loads, and dyadic performance. Overall, the empirical patterns revealed lawful oscillatory constraints governing sequential effects in the time-course and accuracy of performance across a broad continuum of recognition and decision activities.[^1] 
  
 ## Why this is interesting
 
