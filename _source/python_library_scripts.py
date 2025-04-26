@@ -1,0 +1,20 @@
+#library scripts
+pip install pandas;
+pip install numpy;
+pip install matplotlib;
+pip install seaborn;
+pip install scikit-learn;
+pip install statsmodels;
+#pip install tensorflow;
+#pip install keras;
+#pip install torch;
+#pip install transformers;
+#pip install nltk;
+#pip install spacy;
+#pip install opencv-python;
+pip install requests;
+#pip install beautifulsoup4;
+#pip install lxml;
+#pip install flask;
+#pip install django;
+#pip install fastapi;    
