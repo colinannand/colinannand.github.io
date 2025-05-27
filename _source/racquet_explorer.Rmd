@@ -1,0 +1,105 @@
+---
+title: "racket_topography"
+author: "CTA"
+date: "2025-04-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+lapply(c("dplyr","tidyr","ggplot2"), library, character.only=T)
+raq.all <- readr::read_csv("../../../Downloads/rackets_racketspecs_info.csv")
+
+glimpse(raq.all)
+```
+## Basic Data Cleaing
+```{r}
+raq <- raq.all %>% filter(!grepl("Junior", racket_name)) %>% 
+  mutate(head_size_num = as.numeric(head_size_in))
+
+nrow(raq) #234 (drops 28)
+
+raq[is.na(raq$head_size_num),]
+
+#manual fixes - since it's 2 entires out of 200+ and this is a one time thing. Otherwise str_extract("[[:digit:]]=?//  ") or some other regex... like str_extract(""^[^ ]+")
+raq$head_size_num[raq$racket_name=="Babolat Pure Aero Rafa Origin Racquet"] = 100
+raq$head_size_num[raq$racket_name=="Volkl Power Bridge 10 Mid Racquet"] = 93
+
+library(stringr)
+raq$brand = str_extract(pattern = "^[^ ]+ ", raq$racket_name)
+glimpse(raq)
+
+```
+
+```{r}
+p <- 
+  raq %>% ggplot(aes(x=swingweight, y=stiffness, color=brand))+
+    geom_point(aes(size=head_size_num))
+p
+```
+
+```{r}
+library(plotly)
+
+ggplotly(p)
+```
+
+```{r}
+
+x <- as.numeric(raq$stiffness)
+y <- raq$swingweight
+z <- raq$head_size_num
+
+raq.m <- data.frame(x,y,z)
+
+install.packages("zoo") #for timeseries and missing values and such...
+library(zoo)
+library(akima) #3d vis
+#install.packages("rgl")
+library(rgl) #rd graphics package - operates on XQuartz
+
+raq.m <- na.aggregate(raq.m)
+
+mat <- interp(x = raq.m$x, y = raq.m$y, z = raq.m$z, duplicate = "mean")
+
+
+# PLOT THE SURFACE AND THE POINTS.
+options(rgl.printRglwidget = TRUE)
+persp3d(mat$x, mat$y, mat$z, col="yellow")
+points3d(x,y,z, col="red")
+
+
+fig2 <- plot_ly(z = ~mat)
+fig2 <- raq.m %>% plot_ly(x= ~x, y=~y, z = ~z, color= ~key,type="surface", size = 0.5)
+fig2
+fig2 <- fig2 %>% add_surface()
+
+fig2
+
+```
+
+```{r}
+# Interpolate to create a grid
+interp_result <- with(raq.m, akima::interp(x, y, z, duplicate = "mean"))
+
+# Create plot
+plot_ly(
+  x = interp_result$x, 
+  y = interp_result$y, 
+  z = interp_result$z, 
+  type = "surface"
+) %>%
+  layout(
+    scene = list(
+      xaxis = list(title = 'Stiffness'),
+      yaxis = list(title = 'Swingweight'),
+      zaxis = list(title = 'Head Size')
+    )
+  ) %>% 
+  add_markers(x = ~raq.m$x, y=raq.m$y, z=raq.m$z)
+
+```
+

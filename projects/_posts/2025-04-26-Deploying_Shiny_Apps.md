@@ -19,4 +19,4 @@ sitemap: false
 ## Default - Example Shiny App
 - The code for this is located in my github repository:
   - https://colinannand.github.io/_shinyapps/ 
-<iframe src="https://colinannand.github.io/_shinyapps/" style="border:none;width:1000px;height:500px;"></iframe>
+<iframe src="https://colinannand.github.io/_shinyapps/" style="border:none;width:100%x;height:75%;"></iframe>
